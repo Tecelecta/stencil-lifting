@@ -88,6 +88,37 @@ We evaluate Stencil-Lifting on diverse stencil benchmarks from different benchma
 | **Stencil-Lifting** | **77.05× faster than STNG** | ✓ |
 | **Stencil-Lifting** | **5.8× faster than Dexter** | ✓ |
 
+### Reducing Numerical Differences in Quantized Attention
+
+To minimize the maximum differences observed in gradient computations, consider the following optimization strategies:
+
+#### 1. **Improved Quantization Schemes**
+```python
+# Use higher precision for critical computations
+if QUANT_TYPE == 0:  # int8 with better scaling
+    scale = tl.max(tl.abs(x)) / 127. + MIN_SCALE
+    # Add stochastic rounding for better accuracy
+    x_quant = x / scale
+    x_quant += 0.5 * tl.where(x_quant >= 0, 1, -1)
+    x_quant = tl.clamp(x_quant, -127, 127)
+```
+
+#### 2. **Mixed Precision Strategy**
+- Use FP16 for attention weights computation (P matrix)
+- Apply quantization only to K, V matrices in backward pass
+- Keep Q gradients in higher precision
+
+#### 3. **Adaptive Scaling**
+```python
+# Per-channel or per-token scaling instead of per-block
+scale = tl.max(tl.abs(x), axis=1, keepdims=True) / 127. + MIN_SCALE
+```
+
+#### 4. **Gradient Accumulation Improvements**
+- Use FP32 accumulation for all gradient computations
+- Apply quantization only at the final storage step
+- Implement compensation techniques for quantization errors
+
 ### About Missing Baseline in the Artifact
 
 This artifact does not include reproductions for xxx. These baselines were conducted by their respective authors with private code modifications, which are unavailable for inclusion. However, as these baselines are not the top-performing methods in our experiments, their absence does not impact the validity of our experimental results.
