@@ -40,11 +40,10 @@ stencil-lifting/
 ### Building the Project
 
 
-
 ```bash
 mkdir build
 cd build
-cmake ..
+cmake . -B build -DZ3_SINGLE_THREADED=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/PATH/
 make
 ```
 
