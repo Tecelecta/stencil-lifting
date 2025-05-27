@@ -1,29 +1,24 @@
 # OOPSLA25 Stencil-Lifting
 
-This is the artifact of submission #898 (Stencil-Lifting: Hierarchical Recursive Lifting System for Extracting Summary of Stencil Kernel in Legacy Codes.) in OOPSLA 2025.
+This is the artifact of submission **#898** (Stencil-Lifting: Hierarchical Recursive Lifting System for Extracting Summary of Stencil Kernel in Legacy Codes.) in OOPSLA 2025.
 
 ## Project Overview
 
-Stencil-Lifting is a novel system for automatically converting stencil kernels written in low-level languages in legacy code into semantically equivalent Domain-Specific Language (DSL) implementations. This work addresses the efficiency bottlenecks of existing verified lifting systems through innovative theoretical and algorithmic contributions.
+Stencil-Lifting is a novel system for automatically converting stencil kernels written in low-level languages in legacy code into semantically equivalent Domain-Specific Language (DSL) implementations. This work addresses the efficiency bottlenecks of existing verified lifting systems through innovative **hierarchical recursive lifting theory** and **terminating hierarchical recursive lifting algorithm**.
+We evaluate Stencil-Lifting on diverse stencil benchmarks from two different suites and on three real-world applications. 
+Experimental results demonstrate that Stencil-Lifting achieves $77.05×$ and $5.8×$ speedups compared to the state-of-the-art verified lifting methods
+STNG and Dexter, respectively, while maintaining full semantic equivalence.
 
 ## Project Architecture
-
-### Core Components
-
-- **SDSL**: Stencil domain-specific language parser and AST processing
-- **VCG**: Verified code generator with various optimization passes
-- **Backend**: Multi-target code generation backend
-- **SDSLC**: SDSL compiler main program
-
-### Directory Structure
 
 ```
 stencil-lifting/
 ├── src/
-│   ├── SDSL/          # SDSL language parser
+│   ├── SDSL/          # SDSL language parser 
 │   ├── VCG/           # Verified code generator
 │   ├── Backend/       # Code generation backend
 │   └── SDSLC/         # Compiler main program
+├── examples/          # Examples of end-to-end experiments
 ├── include/           # Header files
 ├── translate.py       # Fortran to SDSL translator
 ├── sdsl.py            # SDSL data structure definitions
