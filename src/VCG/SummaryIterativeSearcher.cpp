@@ -2,6 +2,17 @@
 #include "LoopParallelizePass.h"
 #include "ArraySetSolver.h"
 
+#define VIZ(ID, V, LIST, SUM) \
+{\
+std::cout << ID << ": " << V->getName() << " <- ";\
+for (auto dep : LIST)\
+{\
+	std::cout << dep << " ";\
+}\
+std::cout << std::endl;\
+std::cout << SUM.str() << std::endl;\
+}
+
 SummaryIterativeSearcher::SummaryIterativeSearcher()
     : z3Pass(z3ctx), parallelizePass(z3ctx), t(z3ctx.int_const("t")), x(z3ctx.int_const("x")),
     t_begin(z3ctx.int_const("tb")), t_times(z3ctx.int_const("tm")), t_step(z3ctx.int_const("step")),
@@ -57,8 +68,7 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
                         }
                     }
 #ifdef _DEBUG
-                    std::cout << v << ": " << value->getName() << std::endl;
-                    std::cout << parallelizePass.summaryVector[v].str() << std::endl;
+                    VIZ(v, value, parallelizePass.getDependencyByVertex(v), parallelizePass.summaryVector[v])
 #endif
                     return true;
                 }
@@ -72,7 +82,7 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
                     auto v = parallelizePass.vertexId(loop->getSectionCall(0)->getArgument(value->getIndex()));
                     dst = parallelizePass.summaryVector[v];
 #ifdef _DEBUG
-                    std::cout << i << ": " << value->getName() << std::endl;
+                    std::cout << z3Pass.vertexId({ value, {} }) << ": " << value->getName() << std::endl;
                     std::cout << dst.str() << std::endl;
 #endif
                 }
@@ -311,17 +321,33 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 
     std::vector<Summary> firstLoopVC;
     std::vector<Summary> sccOutputSummary;
+    std::unordered_set<int> sccBypassList;
+    std::vector<Summary>  sccBypassSummary;
+    int scc_count = 0;
     for (auto sccOutput : sccOutputList)
     {
         firstLoopVC.push_back(z3Pass.summaryVector[sccOutput]);
         ArraySetSolver solver(z3ctx, t_times,
             z3Pass.vertexAt(sccOutput).value->getType().getNumDims(), z3Pass.summaryVector[sccOutput]);
-        solver.solve();
+
+        //if (solver.tryBypassTiling())
+        if (false)
+        { 
 #ifdef _DEBUG
-        std::cout << sccOutput << ": " << z3Pass.vertexAt(sccOutput).value->getName() << std::endl;
-        std::cout << solver.summary.str() << std::endl;
+            std::cout << "Tiling detected\n";
 #endif // _DEBUG
-        sccOutputSummary.emplace_back(std::move(solver.summary));
+            sccBypassList.insert(scc_count);
+        }
+        else
+        {
+            solver.solve();
+        }
+#ifdef _DEBUG
+		std::cout << sccOutput << ": " << z3Pass.vertexAt(sccOutput).value->getName() << std::endl;
+		std::cout << solver.summary.str() << std::endl;
+#endif // _DEBUG
+		sccOutputSummary.emplace_back(std::move(solver.summary));
+        scc_count++;
     }
 
     // 迭代搜索
@@ -333,6 +359,8 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 #endif
         for (size_t index = 0; index < phiValueVector.size(); index++)
         {
+            if (sccBypassList.find(index) != sccBypassList.end()) continue;
+
             auto v = sccInputList[index];
             auto ast = (Z3_ast)z3Pass.summaryVector[v].base;
             auto phi_summary = nextTimeStep(sccOutputSummary[index]);
@@ -350,9 +378,19 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 
         bool converged = true;
         std::vector<Summary> sccUpdatedSummary;
-        for (const auto& original : sccOutputSummary)
+        //for (const auto& original : sccOutputSummary)
+        for (int index = 0; index < sccOutputSummary.size(); index++)
         {
-            sccUpdatedSummary.emplace_back(updateSummary(original, summaryMap, converged));
+            const auto& original = sccOutputSummary[index];
+            if (sccBypassList.find(index) != sccBypassList.end())
+            {
+                sccUpdatedSummary.emplace_back(original);
+                converged &= true;
+            }
+            else 
+            {
+                sccUpdatedSummary.emplace_back(updateSummary(original, summaryMap, converged));
+            }
 #ifdef _DEBUG
             auto v = sccOutputList[sccUpdatedSummary.size() - 1];
             std::cout << v << ": " << z3Pass.vertexAt(v).value->getName() << std::endl;
@@ -391,11 +429,13 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 
     for (size_t index = 0; index < sccOutputSummary.size(); index++)
     {
+        if (sccBypassList.find(index) != sccBypassList.end()) continue;
         sccOutputSummary[index] = propagateSkolemX(sccOutputSummary[index]);
     }
     std::vector<Summary> loopInvarVC = sccOutputSummary;
     for (size_t index = 0; index < sccOutputSummary.size(); index++)
     {
+        if (sccBypassList.find(index) != sccBypassList.end()) continue;
         loopInvarVC[index] = propagateRead(loopInvarVC[index]);
         sccOutputSummary[index] = propagateRead(nextTimeStep(sccOutputSummary[index]));
     }
@@ -405,15 +445,25 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
     {
         auto& summary = z3Pass.summaryVector[sccInputList[index]];
         summary = sccOutputSummary[index];
-        for (auto& branch : summary.branches)
+        if (sccBypassList.find(index) != sccBypassList.end()) continue;
+		for (auto& branch : summary.branches)
         {
-            branch.cond = simplifyUseTactic(branch.cond && t <= t_times - 1);
-        }
+			branch.cond = simplifyUseTactic(branch.cond && t <= t_times - 1);
+		}
+
     }
-    z3Pass.update(sccOutputList);
+    vertex_list tmpOutputList({});
+    for (int i = 0; i < sccOutputList.size(); i++)
+    {
+        if (sccBypassList.find(i) == sccBypassList.end())
+            tmpOutputList.push_back(sccOutputList[i]);
+    }
+    z3Pass.update(tmpOutputList);
 
     for (size_t index = 0; index < sccOutputList.size(); index++)
     {
+        if (sccBypassList.find(index) != sccBypassList.end()) continue;
+
         Summary s0 = firstLoopVC[index];
         for (auto& branch : s0.branches)
         {
@@ -466,7 +516,14 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
     for (size_t index = 0; index < sccOutputSummary.size(); index++)
     {
         auto u = parallelizePass.vertexId(phiValueVector[index]);
-        parallelizePass.summaryVector[u] = getPostCond(propagateSkolemB(sccOutputSummary[index]));
+        if (sccBypassList.find(index) != sccBypassList.end())
+        {
+            parallelizePass.summaryVector[u] = propagateSkolemB(sccOutputSummary[index]);
+        }
+        else
+        {
+            parallelizePass.summaryVector[u] = getPostCond(propagateSkolemB(sccOutputSummary[index]));
+        }
 #ifdef _DEBUG
         auto v = sccOutputList[index];
         std::cout << v << ": " << z3Pass.vertexAt(v).value->getName() << std::endl;

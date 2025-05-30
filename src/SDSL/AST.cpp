@@ -16,8 +16,8 @@ void printASTNode(const AST* ast, size_t indent)
 	std::cout
 		<< "\033[3" << std::to_string((indent) % 6 + 1) << "m" << getName(ast->category) << "\033[0m: "
 		<< ast->firstToken.text << " "
-		<< "<行: " << ast->firstToken.line
-		<< ", 列: " << ast->firstToken.column << ">\n";
+		<< "<Line : " << ast->firstToken.line
+		<< ", Col : " << ast->firstToken.column << ">\n";
 	for (auto& child : ast->children)
 	{
 		printASTNode(child.get(), indent + 1);
