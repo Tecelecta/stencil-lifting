@@ -1,0 +1,181 @@
+// D:/Fortran/test/solvepde.f
+
+func Real DERMZY_return = DERMZY(Real X)
+	var Z = abs(X)
+	var T = 1.0 / (1.0 + 0.5 * Z)
+	DERMZY_return = T * exp(- Z * Z - 1.26551223 + T * (1.00002368 + T * (0.37409196 + T * (0.09678418 + T * (- 0.18628806 + T * (0.27886807 + T * (- 1.13520398 + T * (1.4885187 + T * (- 0.82215223 + T * 0.17087277)))))))))
+	if X < 0.0
+		DERMZY_return = 2.0 - DERMZY_return
+	end if
+end func
+
+func Integer IFIRST0, Integer ILAST0, Integer IFIRST1, Integer ILAST1, Integer GCW0, Integer GCW1, Real DT, Real GAMMA, Real[? : ?, ? : ?] XO, Real[? : ?, ? : ?] YO, Real[? : ?, ? : ?, 1 : 4] UO, Real[? : ?, ? : ?, 1 : 4] DUX, Real[? : ?, ? : ?, 1 : 4] DUY, Real[? : ?, ? : ?, 1 : 4] FLUX, Real[? : ?, ? : ?, 1 : 4] FLUY, Real[? : ?, ? : ?, 1 : 4] UN = SOLVEPDE(Integer IFIRST0, Integer ILAST0, Integer IFIRST1, Integer ILAST1, Integer GCW0, Integer GCW1, Real DT, Real GAMMA, Real[? : ?, ? : ?] XO, Real[? : ?, ? : ?] YO, Real[? : ?, ? : ?, 1 : 4] UO, Real[? : ?, ? : ?, 1 : 4] DUX, Real[? : ?, ? : ?, 1 : 4] DUY, Real[? : ?, ? : ?, 1 : 4] FLUX, Real[? : ?, ? : ?, 1 : 4] FLUY, Real[? : ?, ? : ?, 1 : 4] UN)
+	var PI = Real()
+	var J = Integer()
+	var K = Integer()
+	var L = Integer()
+	var DTX = Real()
+	var DTY = Real()
+	var ALENG = Real()
+	var SZTAK = Real()
+	var CZTAK = Real()
+	var UU = Real[1 : 4]()
+	var RHOL = Real()
+	var UXL = Real()
+	var UYL = Real()
+	var UNL = Real()
+	var UTL = Real()
+	var PREL = Real()
+	var ALAML = Real()
+	var XI2L = Real()
+	var TEML0 = Real()
+	var TEML1 = Real()
+	var TEML2 = Real()
+	var TEML3 = Real()
+	var TGYLO = Real()
+	var TGYL1 = Real()
+	var TGYL2 = Real()
+	var RHOR = Real()
+	var UXR = Real()
+	var UYR = Real()
+	var UNR = Real()
+	var UTR = Real()
+	var PRER = Real()
+	var ALAMR = Real()
+	var XI2R = Real()
+	var TEMR0 = Real()
+	var TEMR1 = Real()
+	var TEMR2 = Real()
+	var TEMR3 = Real()
+	var TGYRO = Real()
+	var TGYR1 = Real()
+	var TGYR2 = Real()
+	var AREA = Real()
+	var RR = Real()
+	var CK = Real()
+	PI = asin(1.0) * 2.0
+	CK = - 2.0 + 2.0 / (GAMMA - 1.0)
+	do K = IFIRST1, ILAST1
+		do J = IFIRST0, ILAST0 + 1
+			DTX = XO[J, K + 1] - XO[J, K]
+			DTY = YO[J, K + 1] - YO[J, K]
+			ALENG = sqrt(DTX ** 2 + DTY ** 2)
+			SZTAK = DTY / ALENG
+			CZTAK = DTX / ALENG
+			do L = 1, 4
+				UU[L] = UO[J - 1, K, L] + 0.5 * (XO[J, K] - XO[J - 1, K]) * DUX[J - 1, K, L]
+			end do
+			RHOL = UU[1]
+			UXL = UU[2] / UU[1]
+			UYL = UU[3] / UU[1]
+			UNL = SZTAK * UXL - CZTAK * UYL
+			UTL = CZTAK * UXL + SZTAK * UYL
+			PREL = (GAMMA - 1.0) * (UU[4] - 0.5 * RHOL * (UXL * UXL + UYL * UYL))
+			ALAML = 0.5 * RHOL / PREL
+			XI2L = 0.5 * CK / ALAML
+			TEML0 = 0.5 * DERMZY(- sqrt(ALAML) * UNL)
+			TEML1 = UNL * TEML0 + 0.5 * exp(- ALAML * UNL * UNL) / sqrt(ALAML * PI)
+			TEML2 = UNL * TEML1 + 0.5 * TEML0 / ALAML
+			TEML3 = UNL * TEML2 + 1.0 * TEML1 / ALAML
+			TGYLO = 1.0
+			TGYL1 = UTL
+			TGYL2 = UTL * UTL + 0.5 / ALAML
+			FLUX[J, K, 1] = RHOL * TEML1
+			FLUX[J, K, 2] = RHOL * (SZTAK * TEML2 + CZTAK * TEML1 * TGYL1)
+			FLUX[J, K, 3] = RHOL * (- CZTAK * TEML2 + SZTAK * TEML1 * TGYL1)
+			FLUX[J, K, 4] = RHOL * (TEML3 + TEML1 * (TGYL2 + XI2L)) / 2.0
+			do L = 1, 4
+				UU[L] = UO[J, K, L] - 0.5 * (XO[J, K] - XO[J - 1, K]) * DUX[J, K, L]
+			end do
+			RHOR = UU[1]
+			UXR = UU[2] / UU[1]
+			UYR = UU[3] / UU[1]
+			UNR = SZTAK * UXR - CZTAK * UYR
+			UTR = CZTAK * UXR + SZTAK * UYR
+			PRER = (GAMMA - 1.0) * (UU[4] - 0.5 * RHOR * (UXR * UXR + UYR * UYR))
+			ALAMR = 0.5 * RHOR / PRER
+			XI2R = 0.5 * CK / ALAMR
+			TEMR0 = 0.5 * DERMZY(sqrt(ALAMR) * UNR)
+			TEMR1 = UNR * TEMR0 - 0.5 * exp(- ALAMR * UNR * UNR) / sqrt(ALAMR * PI)
+			TEMR2 = UNR * TEMR1 + 0.5 * TEMR0 / ALAMR
+			TEMR3 = UNR * TEMR2 + 1.0 * TEMR1 / ALAMR
+			TGYRO = 1.0
+			TGYR1 = UTR
+			TGYR2 = UTR * UTR + 0.5 / ALAMR
+			FLUX[J, K, 1] = FLUX[J, K, 1] + RHOR * TEMR1
+			FLUX[J, K, 2] = FLUX[J, K, 2] + RHOR * (SZTAK * TEMR2 + CZTAK * TEMR1 * TGYR1)
+			FLUX[J, K, 3] = FLUX[J, K, 3] + RHOR * (- CZTAK * TEMR2 + SZTAK * TEMR1 * TGYR1)
+			FLUX[J, K, 4] = FLUX[J, K, 4] + RHOR * (TEMR3 + TEMR1 * (XI2R + TGYR2)) / 2
+			do L = 1, 4
+				FLUX[J, K, L] = FLUX[J, K, L] * ALENG
+			end do
+		end do
+	end do
+	do K = IFIRST1, ILAST1 + 1
+		do J = IFIRST0, ILAST0
+			DTX = XO[J, K] - XO[J + 1, K]
+			DTY = YO[J, K] - YO[J + 1, K]
+			ALENG = sqrt(DTX ** 2 + DTY ** 2)
+			SZTAK = DTY / ALENG
+			CZTAK = DTX / ALENG
+			do L = 1, 4
+				UU[L] = UO[J, K - 1, L] + 0.5 * (YO[J, K] - YO[J, K - 1]) * DUY[J, K - 1, L]
+			end do
+			RHOL = UU[1]
+			UXL = UU[2] / UU[1]
+			UYL = UU[3] / UU[1]
+			UNL = SZTAK * UXL - CZTAK * UYL
+			UTL = CZTAK * UXL + SZTAK * UYL
+			PREL = (GAMMA - 1.0) * (UU[4] - 0.5 * RHOL * (UXL * UXL + UYL * UYL))
+			ALAML = 0.5 * RHOL / PREL
+			XI2L = 0.5 * CK / ALAML
+			TEML0 = 0.5 * DERMZY(- sqrt(ALAML) * UNL)
+			TEML1 = UNL * TEML0 + 0.5 * exp(- ALAML * UNL * UNL) / sqrt(ALAML * PI)
+			TEML2 = UNL * TEML1 + 0.5 * TEML0 / ALAML
+			TEML3 = UNL * TEML2 + 1.0 * TEML1 / ALAML
+			TGYLO = 1.0
+			TGYL1 = UTL
+			TGYL2 = UTL * UTL + 0.5 / ALAML
+			FLUY[J, K, 1] = RHOL * TEML1
+			FLUY[J, K, 2] = RHOL * (SZTAK * TEML2 + CZTAK * TEML1 * TGYL1)
+			FLUY[J, K, 3] = RHOL * (- CZTAK * TEML2 + SZTAK * TEML1 * TGYL1)
+			FLUY[J, K, 4] = RHOL * (TEML3 + TEML1 * (TGYL2 + XI2L)) / 2.0
+			do L = 1, 4
+				UU[L] = UO[J, K, L] - 0.5 * (YO[J, K] - YO[J, K - 1]) * DUY[J, K, L]
+			end do
+			RHOR = UU[1]
+			UXR = UU[2] / UU[1]
+			UYR = UU[3] / UU[1]
+			UNR = SZTAK * UXR - CZTAK * UYR
+			UTR = CZTAK * UXR + SZTAK * UYR
+			PRER = (GAMMA - 1.0) * (UU[4] - 0.5 * RHOR * (UXR * UXR + UYR * UYR))
+			ALAMR = 0.5 * RHOR / PRER
+			XI2R = 0.5 * CK / ALAMR
+			TEMR0 = 0.5 * DERMZY(sqrt(ALAMR) * UNR)
+			TEMR1 = UNR * TEMR0 - 0.5 * exp(- ALAMR * UNR * UNR) / sqrt(ALAMR * PI)
+			TEMR2 = UNR * TEMR1 + 0.5 * TEMR0 / ALAMR
+			TEMR3 = UNR * TEMR2 + 1.0 * TEMR1 / ALAMR
+			TGYRO = 1.0
+			TGYR1 = UTR
+			TGYR2 = UTR * UTR + 0.5 / ALAMR
+			FLUY[J, K, 1] = FLUY[J, K, 1] + RHOR * TEMR1
+			FLUY[J, K, 2] = FLUY[J, K, 2] + RHOR * (SZTAK * TEMR2 + CZTAK * TEMR1 * TGYR1)
+			FLUY[J, K, 3] = FLUY[J, K, 3] + RHOR * (- CZTAK * TEMR2 + SZTAK * TEMR1 * TGYR1)
+			FLUY[J, K, 4] = FLUY[J, K, 4] + RHOR * (TEMR3 + TEMR1 * (XI2R + TGYR2)) / 2
+			do L = 1, 4
+				FLUY[J, K, L] = FLUY[J, K, L] * ALENG
+			end do
+		end do
+	end do
+	do K = IFIRST1, ILAST1
+		do J = IFIRST0, ILAST0
+			AREA = 0.5 * ((XO[J, K] - XO[J + 1, K + 1]) * (YO[J + 1, K] - YO[J, K + 1]) - (YO[J, K] - YO[J + 1, K + 1]) * (XO[J + 1, K] - XO[J, K + 1]))
+			RR = DT / AREA
+			do L = 1, 4
+				UN[J, K, L] = UO[J, K, L] - RR * (FLUX[J + 1, K, L] - FLUX[J, K, L]) - RR * (FLUY[J, K + 1, L] - FLUY[J, K, L])
+			end do
+		end do
+	end do
+end func
+
+
