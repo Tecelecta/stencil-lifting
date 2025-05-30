@@ -44,7 +44,7 @@ stencil-lifting/
 ```bash
 mkdir build
 cd build
-cmake . -B build -DZ3_SINGLE_THREADED=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/PATH/
+cmake -DCMAKE_BUILD_TYPE=Release -DZ3_DIR=<path-to-z3-config> -DBoost_DIR=<path-to-boost-config> -DZ3_SINGLE_THREADED=true ..
 make
 ```
 
@@ -87,6 +87,8 @@ We evaluate Stencil-Lifting on a server equipped with:
     - Ubuntu Linux 20.04.5 LTS (kernel 5.15.0-48-generic)
     - GCC 9.4.0
     - GNU Fortran 9.4.0
+    - z3 4.2.0
+    - Boost 1.87.0
     - LLVM 15.0.2
     - Halide 14.0.0
 - **Optimization**: Halide code is autotuned using the OpenTuner framework for optimal scheduling
