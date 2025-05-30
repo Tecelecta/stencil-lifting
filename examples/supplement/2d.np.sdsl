@@ -1,0 +1,263 @@
+func Real[?:?, ?:?] A0, Real[?:?, ?:?] A1, Integer NX, Integer NY, Integer T, Integer Bx, Integer By, Integer tb, Integer XSLOPE, Integer YSLOPE = StencilProbe_heat(Real[?:?, ?:?] A0, Real[?:?, ?:?] A1, Integer NX, Integer NY, Integer T, Integer Bx, Integer By, Integer tb, Integer XSLOPE, Integer YSLOPE)
+    var bx = Integer()
+    var by = Integer()
+
+    var ix = Integer()
+    var iy = Integer()
+    
+    var xnb0 = Integer()
+    var ynb0 = Integer()
+    var xnb11 = Integer()
+    var ynb12 = Integer()
+    var xnb12 = Integer()
+    var ynb11 = Integer()
+    var xnb2 = Integer()
+    var ynb2 = Integer()
+    
+    var nb1 = Real[? : ?]()
+    var nb02 = Real[? : ?]()
+    var xnb1 = Real[? : ?]()
+    var xnb02 = Real[? : ?]()
+    var xleft02 = Real[? : ?]()
+    var ybottom02 = Real[? : ?]()
+    var xleft11 = Real[? : ?]()
+    var ybottom11 = Real[? : ?]()
+    var xleft12 = Real[? : ?]()
+    var ybottom12 = Real[? : ?]()
+
+    var level = Integer()
+    var tt = Integer()
+    var n = Integer()
+    var t = Integer()
+    var xmin = Integer()
+    var xmax = Integer()
+    var ymin = Integer()
+    var ymax = Integer()
+    var x = Integer()
+    var y = Integer()
+    var tmp = Integer()
+
+    bx = Bx - 2 * (tb * XSLOPE)
+    by = By - 2 * (tb * YSLOPE)
+    ix = Bx + bx
+    iy = By + by
+
+    xnb0 = (NX + ix - 1) / ix   // ceild(NX, ix)
+    ynb0 = (NY + iy - 1) / iy   // ceild(NY, iy)
+    xnb11 = (NX + (Bx - bx) / 2 + ix - 1) / ix
+    ynb12 = (NY + (By - by) / 2 + iy - 1) / iy
+    ynb11 = ynb0
+    xnb12 = xnb0
+    xnb2 = xnb11
+    ynb2 = ynb12
+
+    nb1[0] = xnb11 * ynb11
+    nb1[1] = xnb12 * ynb12
+    nb02[0] = xnb0 * ynb0
+    nb02[1] = xnb2 * ynb2
+    xnb1[0] = xnb11
+    xnb1[1] = xnb12
+    xnb02[0] = xnb0
+    xnb02[1] = xnb2
+
+    xleft02[0] = XSLOPE + bx
+    xleft02[1] = XSLOPE - (Bx - bx) / 2
+    ybottom02[0] = YSLOPE + by
+    ybottom02[1] = YSLOPE - (By - by) / 2
+    xleft11[0] = XSLOPE
+    xleft11[1] = XSLOPE + ix / 2
+    ybottom11[0] = YSLOPE + by
+    ybottom11[1] = YSLOPE - (By - by) / 2
+    xleft12[0] = XSLOPE + bx
+    xleft12[1] = XSLOPE - (Bx - bx) / 2
+    ybottom12[0] = YSLOPE
+    ybottom12[1] = YSLOPE + iy / 2
+
+    level = 0
+
+
+    do tt = -tb, T - 1, tb
+        do n = 0, nb02[level] - 1
+            var max1 = Integer()
+            if tt > 0
+                max1 = tt
+            else
+                max1 = 0
+            end if 
+            var min1 = Integer()
+            if tt + 2* tb < T
+                min1 = tt + 2*tb
+            else
+                min1 = T
+            end if
+            do t = mmax1, min1, 1
+                tmp = t + 1 - (tt + tb)
+                if tmp >= 0 
+                    var max2 = Integer()
+                    if XSLOPE > xleft02[level] + (n % xnb02[level]) * ix + tmp * XSLOPE
+                        max2 = XSLOPE
+                    else
+                        max2 = left02[level] + (n % xnb02[level]) * ix + tmp * XSLOPE
+                    end if
+                    xmin = max2
+
+                    var min2 = Integer()
+                    if NX + XSLOPE < xleft02[level] + (n % xnb02[level]) * ix + Bx - tmp * XSLOPE
+                        min2 = NX + XSLOPE
+                    else 
+                        min2 = xleft02[level] + (n % xnb02[level]) * ix + Bx - tmp * XSLOPE
+                    end if 
+                    xmax = min2
+
+                    var max3 = Integer()
+                    if YSLOPE > ybottom02[level] + (n / xnb02[level]) * iy + tmp * YSLOPE
+                        max3 = YSLOPE
+                    else
+                        max3 = ybottom02[level] + (n / xnb02[level]) * iy + tmp * YSLOPE
+                    end if 
+                    ymin = max3
+
+                    var min3 = Integer()
+                    if NY + YSLOPE < ybottom02[level] + (n / xnb02[level]) * iy + By - tmp * YSLOPE
+                        min3 = NY + YSLOPE
+                    else
+                        min3 = ybottom02[level] + (n / xnb02[level]) * iy + By - tmp * YSLOPE
+                    end if 
+                    ymax = min3
+                else
+                    var max4 = Integer()
+                    if XSLOPE > xleft02[level] + (n % xnb02[level]) * ix - tmp * XSLOPE
+                        max4 = XSLOPE
+                    else 
+                        max4 = xleft02[level] + (n % xnb02[level]) * ix - tmp * XSLOPE
+                    end if
+                    xmin = max4
+
+                    var min4 = Integer()
+                    if NX + XSLOPE < xleft02[level] + (n % xnb02[level]) * ix + Bx + tmp * XSLOPE
+                        min4 = NX + XSLOPE
+                    else
+                        min4 = xleft02[level] + (n % xnb02[level]) * ix + Bx + tmp * XSLOPE
+                    end if
+                    xmax = min4
+
+                    var max5 = Integer()
+                    if YSLOPE > ybottom02[level] + (n / xnb02[level]) * iy - tmp * YSLOPE
+                        max5 = YSLOPE
+                    else 
+                        max5 = ybottom02[level] + (n / xnb02[level]) * iy - tmp * YSLOPE
+                    end if
+                    ymin = max5
+
+                    var min5 = Integer()
+                    if NY + YSLOPE < ybottom02[level] + (n / xnb02[level]) * iy + By + tmp * YSLOPE
+                        min5 = NY + YSLOPE
+                    else 
+                        min5 = ybottom02[level] + (n / xnb02[level]) * iy + By + tmp * YSLOPE
+                    end if
+                    ymax = min5
+                end if
+
+                do x = xmin, xmax, 1
+                    do y = ymin, ymax, 1
+                        if (t % 2 == 0)
+                            A1[x, y] = 0.125 * (A0[x+1, y] - 2.0 * A0[x, y] + A0[x-1, y]) + 0.125 * (A0[x, y+1] - 2.0 * A0[x, y] + A0[x, y-1]) + A0[x, y]
+                        else
+                            A0[x, y] = 0.125 * (A1[x+1, y] - 2.0 * A1[x, y] + A1[x-1, y]) + 0.125 * (A1[x, y+1] - 2.0 * A1[x, y] + A1[x, y-1]) + A1[x, y]
+                        end if
+                    end do
+                end do
+            end do
+        end do
+
+        do n = 0, nb1[0] + nb1[1], 1
+            var min6 = Integer()
+            if t + 2 * tb < T
+                min6 = t + 2 * tb
+            else 
+                min6 = T
+            end if
+            do t = tt + tb, min6, 1
+                if (n < nb1[level])
+                    tmp = t + 1 - (tt + tb)
+                    var max7 = Integer()
+                    if XSLOPE > xleft11[level] + (n % xnb1[level]) * ix - tmp * XSLOPE
+                        max7 = XSLOPE
+                    else
+                        max7 = left11[level] + (n % xnb1[level]) * ix - tmp * XSLOPE
+                    end if
+                    xmin = max7
+
+                    var min7 = Integer()
+                    if NX + XSLOPE < xleft11[level] + (n % xnb1[level]) * ix + bx + tmp * XSLOPE
+                        min7 = NX + XSLOPE
+                    else 
+                        min7 = xleft11[level] + (n % xnb1[level]) * ix + bx + tmp * XSLOPE
+                    end if 
+                    xmax = min7
+
+                    var max8 = Integer()
+                    if YSLOPE > ybottom11[level] + (n / xnb1[level]) * iy + tmp * YSLOPE
+                        max8 = YSLOPE
+                    else
+                        max8 = ybottom11[level] + (n / xnb1[level]) * iy + tmp * YSLOPE
+                    end if 
+                    ymin = max8
+
+                    var min8 = Integer()
+                    if NY + YSLOPE < ybottom11[level] + (n / xnb1[level]) * iy + By - tmp * YSLOPE
+                        min8 = NY + YSLOPE
+                    else
+                        min8 = ybottom11[level] + (n / xnb1[level]) * iy + By - tmp * YSLOPE
+                    end if 
+                    ymax = min8
+                else
+                    tmp = n - nb1[level]
+                    var max9 = Integer()
+                    if XSLOPE > xleft12[level] + (tmp % xnb1[1-level]) * ix + (t+1-tt-tb) * XSLOPE
+                        max9 = XSLOPE
+                    else
+                        max9 = xleft12[level] + (tmp % xnb1[1-level]) * ix + (t+1-tt-tb) * XSLOPE
+                    end if
+                    xmin = max9
+
+                    var min9 = Integer()
+                    if NX + XSLOPE < xleft12[level] + (tmp % xnb1[1-level]) * ix + Bx - (t+1-tt-tb) * XSLOPE
+                        min9 = NX + XSLOPE
+                    else
+                        min9 = xleft12[level] + (tmp % xnb1[1-level]) * ix + Bx - (t+1-tt-tb) * XSLOPE
+                    end if
+                    xmax = min9
+
+                    var max10 = Integer()
+                    if YSLOPE > ybottom12[level] + (tmp / xnb1[1-level]) * iy - (t+1-tt-tb) * YSLOPE
+                        max10 = YSLOPE
+                    else
+                        max10 = ybottom12[level] + (tmp / xnb1[1-level]) * iy - (t+1-tt-tb) * YSLOPE
+                    end if
+                    ymin = max10
+
+                    var min10 = Integer()
+                    if NY + YSLOPE < ybottom12[level] + (tmp / xnb1[1-level]) * iy + by + (t+1-tt-tb) * YSLOPE
+                        min10 = NY + YSLOPE
+                    else
+                        min10 = ybottom12[level] + (tmp / xnb1[1-level]) * iy + by + (t+1-tt-tb) * YSLOPE
+                    end if 
+                    ymax = min10
+                end if
+
+                do x = xmin, xmax, 1
+                    do y = ymin, ymax, 1
+                        if (t % 2 == 0) then
+                            A1[x, y] = 0.125 * (A0[x+1, y] - 2.0 * A0[x, y] + A0[x-1, y]) + 0.125 * (A0[x, y+1] - 2.0 * A0[x, y] + A0[x, y-1]) + A0[x, y]
+                        else
+                            A0[x, y] = 0.125 * (A1[x+1, y] - 2.0 * A1[x, y] + A1[x-1, y]) + 0.125 * (A1[x, y+1] - 2.0 * A1[x, y] + A1[x, y-1]) + A1[x, y]
+                        end if
+                    end do
+                end do
+            end do
+        end do
+        
+        level = 1 - level
+    end do
+end func

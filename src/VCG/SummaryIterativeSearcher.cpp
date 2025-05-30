@@ -330,8 +330,7 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         ArraySetSolver solver(z3ctx, t_times,
             z3Pass.vertexAt(sccOutput).value->getType().getNumDims(), z3Pass.summaryVector[sccOutput]);
 
-        //if (solver.tryBypassTiling())
-        if (false)
+        if (solver.tryBypassTiling())
         { 
 #ifdef _DEBUG
             std::cout << "Tiling detected\n";

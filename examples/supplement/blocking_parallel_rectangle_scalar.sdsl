@@ -1,0 +1,94 @@
+func Real[? : ?] A, Integer NX, Integer NY, Integer T, Integer xb, Integer yb, Integer tb = blocking_parallel_rectangle_scalar(Real[? : ?] A, Integer NX, Integer NY, Integer T, Integer xb, Integer yb, Integer tb)
+    var B = (Real[2, NX + 2 * XSTART, NY + 2 * YSTART]) A
+
+    var Bx = xb
+    var bx = Bx - 2 * tb * XSLOPE
+    var ix = Bx + bx   
+    var nb0 = Integer[? : ?]()
+    nb0[0] = (NX - Bx) / ix
+    nb0[1] = (NX - Bx) / ix + 1
+    var nrestpoints = NX mod ix   
+    var bx_first_B1 = (Bx + nrestpoints) / 2
+    var bx_last_B1  = (Bx + nrestpoints) - bx_first_B1
+    var xright = Integer[? : ?]()
+    xright[0] = bx_first_B1 + Bx + XSTART
+    xright[1] = bx_first_B1 + (Bx - bx) / 2 + XSTART
+
+    var wave = Integer()
+    var mylevel = Integer()
+    var tt = Integer()
+    var xx = Integer()
+    var yy = Integer()
+    var t = Integer()
+    var x = Integer()
+    var y = Integer()
+    var xmin = Integer()
+    var xmax = Integer()
+    var ybeg = Integer()
+
+    do wave = 0, (T + tb - 1) / tb + 1 + (NY + T - 1 + yb - 1) / yb, 1
+        var nb =Integer()
+        if nb0[0] > nb0[1]
+            nb = nb0[0]
+        else
+            nb = nb0[1]
+        end if
+
+        do xx = 0, nb, 1
+
+            do yy = 0, 2 * (NY + T - 1 + yb - 1) / yb, 1
+                mylevel = (wave mod 2 + yy) mod 2
+
+                if ( (mylevel == 1 and xx < nb0[1]) or (mylevel == 0 and xx < nb0[0]) )
+                    tt = -tb + (wave - yy) * tb
+
+                    if T > tt + 2 * tb
+                        T = tt + 2 * tb
+                    end if
+                    if tt < 0
+                        tt = 0
+                    end if
+                    do t = tt, T, 1
+                        
+                        if (mylevel == 1 and xx == 0)
+                            xmin = XSTART
+                        else
+                            xmin = (xright[mylevel] - Bx + xx * ix + myabs((tt + tb), (t + 1)) * XSLOPE)
+                        end if
+                        
+                        if mylevel == 1 and xx == nb0[1] - 1
+                            xmax = NX + XSTART
+                        else
+                            xmax = (xright[mylevel] - Bx + xx * ix - myabs((tt + tb), (t + 1)) * XSLOPE)
+                        end if
+
+                        ybeg = YSTART - wave * tb + yy * (yb + tb) - (t - tt)
+
+                        do x = xmin, xmax, 1
+                            var y_begin = Integer()
+                            var y_end = Integer()
+                            if YSTART > ybeg
+                                y_begin = YSTART
+                            else
+                                y_begin = ybeg
+                            endif
+                            if NY + YSTART < ybeg + yb
+                                y_end = NY + YSTART
+                            else
+                                y_end = ybeg + yb
+                            endif
+                            do y = y_begin, y_end, 1
+
+                                B[(t + 1) mod 2, x, y] = C0 * B[t mod 2, x, y] + C1 * (B[t mod 2, x, y - 1] + B[t mod 2, x + 1, y] + B[t mod 2, x - 1, y] + B[t mod 2, x, y + 1])
+                                
+                            end do
+
+                        end do
+
+                    end do
+                    
+                end if
+            end do
+        end do
+    end do
+end func

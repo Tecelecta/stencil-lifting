@@ -351,7 +351,7 @@ bool ArraySetSolver::solveExistCond(ArrayWriteCond& write)
 		std::cout << "existCondEquation:\n" << write.existCond << std::endl;
 		std::cout << "ec:\n" << ec << std::endl;
 		std::cout << "xs(" << xs.size() << ")\n";
-		for (auto& x : xs){
+		for (const auto& x : xs) {
 			std::cout << x << std::endl;
 		}
 		std::cout << std::endl;

@@ -536,7 +536,7 @@ bool is_unrolled(z3::context& z3ctx, Summary::Branch& src, Summary::Branch& dst,
 					range_expr = (0 <= *range_token && *range_token <= off);
 				}
 				auto new_v = z3::expr_vector(z3ctx);
-				for (auto& expr : d_subs)
+				for (const auto& expr : d_subs)
 				{
 					new_v.push_back((expr+*range_token).simplify());
 				}
