@@ -113,7 +113,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 	formMap["Integer.neg"] = formMap["int.neg"] = formMap["Integer.add"] = formMap["int.add"] =
 	formMap["Integer.sub"] = formMap["int.sub"] = formMap["Integer.mul"] = formMap["int.mul"] =
 	formMap["Integer.max"] = formMap["int.max"] = formMap["Integer.min"] = formMap["int.min"] =
-	formMap["Integer.abs"] = formMap["int.abs"] =
+	formMap["Integer.abs"] = formMap["int.abs"] = formMap["Integer.mod"] = formMap["int.mod"] =
 		[](const std::vector<Summary::Form>& src)
 		{
 			for (auto form : src)

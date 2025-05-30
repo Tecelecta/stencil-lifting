@@ -1,0 +1,19 @@
+MODULE mg_loop13_mod
+CONTAINS
+SUBROUTINE mg_loop13(i1,i2,n1,n2,n3,u)
+INTEGER :: i1
+INTEGER :: i2
+INTEGER :: n1
+INTEGER :: n2
+INTEGER :: n3
+DOUBLE PRECISION, DIMENSION(100,100,100) :: u
+DO i2 = 1, 100
+DO i1 = 1, 100
+u(i1,i2,1) = u(i1,i2,100 - 1)
+u(i1,i2,100) = u(i1,i2,2)
+END DO
+END DO
+END SUBROUTINE 
+
+END MODULE mg_loop13_mod
+
