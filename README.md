@@ -35,8 +35,9 @@ stencil-lifting/
 - CMake 3.16+
 - C++17 compiler
 - Z3 SMT solver 4.12+
-- Python 3.x
+- Python 3.9
 - fparser2
+- Boost 1.87+
 
 ### Building the Project
 
@@ -87,8 +88,6 @@ We evaluate Stencil-Lifting on a server equipped with:
     - Ubuntu Linux 20.04.5 LTS (kernel 5.15.0-48-generic)
     - GCC 9.4.0
     - GNU Fortran 9.4.0
-    - z3 4.2.0
-    - Boost 1.87.0
     - LLVM 15.0.2
     - Halide 14.0.0
 - **Optimization**: Halide code is autotuned using the OpenTuner framework for optimal scheduling
