@@ -1,6 +1,17 @@
 ﻿#include "LoopParallelizePass.h"
 #include "Context.h"
 
+#ifdef _DEBUG
+#include <sstream>
+std::string viz_z3(z3::expr expr) {
+	std::stringstream ss;
+	ss << expr;
+	return ss.str();
+}
+#endif
+
+#define STEP 4
+
 LoopParallelizePass::LoopParallelizePass(z3::context& z3ctx) : z3ctx(z3ctx)
 {
 	createValueBuildersVisitor.defaultFunction = [this](Value* value, uint32_t i)
@@ -115,7 +126,8 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 	{
 		for (uint32_t i = 0; i < branch.index.size(); i++)
 		{
-			if (proveEquals(w[i], branch.index[i].func))
+			if (proveEquals(w[i], branch.index[i].func)
+				|| proveEquals((w[i]-STEP)/STEP*STEP+STEP, branch.index[i].func))
 			{
 				if (!isLoop.at(i))
 				{
@@ -222,11 +234,14 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 Value* LoopParallelizePass::translateExprAndSaveResult(z3::expr expr, SimpleSection::Builder builder,
 	std::unordered_map<Z3_ast, Value*>& valueMap)
 {
+#ifdef _DEBUG
+	auto s = viz_z3(expr);
+#endif 
 	auto iter = valueMap.find(expr);
 	if (iter == valueMap.end())
 	{
 #ifdef _DEBUG
-		std::cout << "creating value for expr:" << expr << std::endl;
+		std::cout << "creating value for expr:" << s << std::endl;
 #endif
 		auto result = translateExpr(expr, builder, valueMap);
 		iter = valueMap.emplace(expr, result).first;
@@ -439,7 +454,7 @@ Value* LoopParallelizePass::translateExpr(z3::expr expr, SimpleSection::Builder 
 				if (tupleGet == nullptr)
 				{
 					// 不是tuple应该是free variable了
-					if (expr.get_sort().is_int()) {
+					if (expr.to_string()[0] == 'w') {
 						throw std::logic_error("需要创建bound value");
 					} else {
 						std::cerr << expr << std::endl;

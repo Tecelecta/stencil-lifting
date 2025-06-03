@@ -28,6 +28,8 @@ public:
 
 	bool solve();
 
+	bool tryBypassTiling();
+
 private:
 	void initWriteCond();
 

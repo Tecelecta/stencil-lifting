@@ -19,14 +19,16 @@ RETURN_TYPE: {
 		nextToken();
 		goto RETURN_ID;
 	}
-	ERROR("在分析函数定义时，未识别到返回值")
+	// ERROR("在分析函数定义时，未识别到返回值")
+	ERROR("Return value not found when parsing function")
 }
 
 RETURN_ID: {
 	switch (readToken().category)
 	{
 	case Token::Category::LBRACKET:
-		RECURSE(ArraySubscriptExpressionParser, "在数组表达式中发现语法错误");
+		// "在数组表达式中发现语法错误"
+		RECURSE(ArraySubscriptExpressionParser, "Syntax error when parsing Array Expr");
 		astNodeReduce(AST::Category::ARRAY_ELEMENT, 2);
 		goto RETURN_ID;
 	case Token::Category::IDENTIFIER:
@@ -47,9 +49,12 @@ RETURN_ID: {
 			nextToken();
 			goto FUNC_NAME;
 		}
-		ERROR("在分析函数定义时，未识别到赋值号'='")
+		// ERROR("在分析函数定义时，未识别到赋值号'='")
+		ERROR("Assgining operator '=' not found when parsing function defs")
 	default: {
-		auto message = readToken().isKeyword() ? "在分析函数定义时，使用关键字作为返回值名" : "在分析函数定义时，未识别到返回值名";
+		auto message = readToken().isKeyword() ? 
+			"Keywords as return variable name when parsing function defs" : //"在分析函数定义时，使用关键字作为返回值名" 
+			"Return variable name not found when parsing function defs"; //"在分析函数定义时，未识别到返回值名"
 		ERROR(message);
 	}
 	}
@@ -68,7 +73,8 @@ FUNC_NAME: {
 			nextToken();
 			goto PARA_TYPE;
 		}
-		ERROR("在分析函数定义时，未识别到函数参数")
+		// ERROR("在分析函数定义时，未识别到函数参数")
+		ERROR("Parameter not found when parsing function defs")
 	}
 	auto message = readToken().isKeyword() ? "在分析函数定义时，使用关键字作为函数名" : "在分析函数定义时，未识别到函数名";
 	ERROR(message);

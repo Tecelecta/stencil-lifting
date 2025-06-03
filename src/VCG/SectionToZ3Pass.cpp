@@ -113,7 +113,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 	formMap["Integer.neg"] = formMap["int.neg"] = formMap["Integer.add"] = formMap["int.add"] =
 	formMap["Integer.sub"] = formMap["int.sub"] = formMap["Integer.mul"] = formMap["int.mul"] =
 	formMap["Integer.max"] = formMap["int.max"] = formMap["Integer.min"] = formMap["int.min"] =
-	formMap["Integer.abs"] = formMap["int.abs"] =
+	formMap["Integer.abs"] = formMap["int.abs"] = formMap["Integer.mod"] = formMap["int.mod"] =
 		[](const std::vector<Summary::Form>& src)
 		{
 			for (auto form : src)
@@ -528,6 +528,8 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 								dst_sk.push_back(skolemFunc);
 								branch.cond = branch.cond.substitute(src_b, dst_sk);
 								branch.elem = branch.elem.substitute(src_b, dst_sk);
+
+								//branch.index[j].func = branch.index[j].func.substitute(src_b, dst_sk);
 							}
 						}
 						branch.cond = simplifyUseTactic(branch.cond);
@@ -618,7 +620,11 @@ bool SectionToZ3Pass::update(uint32_t i)
 	{
 		const auto& path = vertexAt(i);
 #ifdef _DEBUG
-		std::cout << i << ": " << path.value->getName() << std::endl;
+		std::cout << i << ": " << path.value->getName() << " <- ";
+		for (auto& dep : getOperandsByVertex(i)) {
+			std::cout << dep << " ";
+		}
+		std::cout << std::endl;
 #endif // _DEBUG
 		if (!SectionToZ3Pass::operator()(path.value, i, path.callVector))
 		{

@@ -409,6 +409,8 @@ static void createArraySetSummary(Summary& result, size_t layer, const std::vect
 	}
 }
 
+bool is_unrolled(z3::context&, Summary::Branch& src, Summary::Branch& dst, z3::expr*&);
+
 Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVector, const z3::expr_vector& arrayBound)
 {
 	auto& z3ctx = arrayBound.ctx();
@@ -425,15 +427,131 @@ Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVecto
 	override_cond = override_cond.simplify();
 	const auto& arr = srcVector.front();
 	assert(arr.form == Summary::Form::ARRAY);
+	z3::expr* unroll_offset_token = nullptr;
 	for (const auto& branch : arr.branches)
 	{
 		auto remain_cond = simplifyUseTactic(!override_cond && branch.cond);
 		if (!remain_cond.is_false())
 		{
+			// handling unrolled braches
+//			for ( auto& new_br : result.branches ) 
+//			{
+//				if (is_unrolled(z3ctx, branch, new_br, unroll_offset_token)) 
+//				{
+//#ifdef _DEBUG
+//					std::cout << "Unrolled loop detected.\n";
+//#endif
+//				}
+//			}
 			result.mergeBranch({ remain_cond, branch.elem, branch.layer, branch.index, branch.skolem_x });
 		}
 	}
+	if (unroll_offset_token == nullptr)
+	{
+		delete unroll_offset_token;
+	}
 	return result;
+}
+
+void index_diff(const std::vector<Summary::WriteIndex>& a, 
+				const std::vector<Summary::WriteIndex>& b,
+				z3::expr_vector& ret) 
+{
+	assert(a.size() == b.size());
+	for (int i = 0; i < a.size(); i++)
+	{
+		ret.push_back((a[i].func - b[i].func).simplify());
+	}
+}
+
+bool is_unrolled(const z3::expr a, const z3::expr b, const z3::expr off, const int dim, 
+				 z3::expr_vector& a_subs, z3::expr_vector& b_subs)
+{
+	auto kind = a.decl().decl_kind();
+	auto num_args = a.num_args();
+#ifdef _DEBUG
+	std::cout << "a: " << a << std::endl;
+	std::cout << "b: " << b << std::endl;
+#endif
+	if (b.decl().decl_kind() != kind
+		|| b.num_args() != num_args) return false;
+	if (kind == Z3_OP_SELECT)
+	{
+		auto a_arr = a.arg(0);
+		auto b_arr = b.arg(0);
+		auto a_dim = a.arg(dim + 1);
+		auto b_dim = b.arg(dim + 1);
+		if (proveEquals(a_arr, b_arr) && proveEquals(a_dim, b_dim + off))
+		{
+			a_subs.push_back(a_dim);
+			b_subs.push_back(b_dim);
+			return true;
+		}
+	}
+	else
+	{
+		bool accum = proveEquals(a, b);
+		if (!accum) 
+		{
+			accum = true;
+			for (int i = 0; i < num_args; i++)
+			{
+				accum = accum && is_unrolled(a.arg(i), b.arg(i), off, dim, a_subs, b_subs);
+			}
+		}
+		return accum;
+	}
+}
+
+
+bool is_unrolled(z3::context& z3ctx, Summary::Branch& src, Summary::Branch& dst, z3::expr*& range_token) 
+{
+	// traverse dims to find the unrolled dim
+	bool detect = false;
+	int nz_count = 0;
+	z3::expr_vector index_offsets(z3ctx);
+	index_diff(src.index, dst.index, index_offsets);
+	for (int i = 0; i < src.index.size(); i++) {
+		auto off = index_offsets[i];
+		if (off.is_const() && proveNotZero(off)) 
+		{ // a valid offset
+			auto s_subs = z3::expr_vector(z3ctx);
+			auto d_subs = z3::expr_vector(z3ctx);
+			if (is_unrolled(src.elem, dst.elem, off, i, s_subs, d_subs))
+			{
+				detect = true;
+				z3::expr range_expr(z3ctx);
+				if (range_token == nullptr) 
+				{
+					std::stringstream ss;
+					ss << "off_" << i;
+					range_token = new z3::expr(off.ctx().int_const(ss.str().c_str()));
+				} 
+				if (proveTrue(off >= 0))
+				{
+					range_expr = (off <= *range_token && *range_token <= 0);
+				} 
+				else
+				{
+					range_expr = (0 <= *range_token && *range_token <= off);
+				}
+				auto new_v = z3::expr_vector(z3ctx);
+				for (const auto& expr : d_subs)
+				{
+					new_v.push_back((expr+*range_token).simplify());
+				}
+				src.elem = src.elem.substitute(s_subs, new_v);
+				dst.elem = dst.elem.substitute(d_subs, new_v);
+				src.index[i].func = (src.index[i].func + *range_token - off).simplify();
+				dst.index[i].func = (dst.index[i].func + *range_token).simplify();
+				src.cond = src.cond && range_expr;
+				dst.cond = dst.cond && range_expr;
+			}
+			nz_count++;
+		}
+	}
+	assert(nz_count == 1);
+	return detect;
 }
 
 std::vector<z3::expr> getArrayBound(size_t dims)

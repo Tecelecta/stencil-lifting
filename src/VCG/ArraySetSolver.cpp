@@ -15,6 +15,201 @@ ArraySetSolver::ArraySetSolver(z3::context& z3ctx, z3::expr times, size_t numDim
 	dst_times.push_back(times);
 }
 
+static bool has(const z3::expr& expr, const std::string& key)
+{
+	return expr.to_string().find(key) != std::string::npos;
+}
+
+static z3::expr find_w_bound(z3::expr expr, z3::expr key, bool is_ub, bool dft = false)
+{
+	auto kind = expr.decl().decl_kind();
+	auto ret = expr.ctx().bool_val(dft);
+	auto skey = key.to_string();
+	if (kind == Z3_OP_OR)
+	{
+		for (auto const arg : expr.args())
+		{
+			if (has(arg, skey))
+				ret = ret || find_w_bound(arg, key, is_ub);
+		}
+	}
+	else if (kind == Z3_OP_AND)
+	{		
+		ret = expr.ctx().bool_val(true);
+		for (auto const arg : expr.args())
+		{
+			if (has(arg, skey))
+				ret = ret && find_w_bound(arg, key, is_ub, true);
+		}
+	}
+	else if (kind == Z3_OP_ITE)
+	{
+		if (has(expr.arg(1), skey)) 
+		{
+			ret = find_w_bound(expr.arg(0) && expr.arg(1), key, is_ub);
+		}
+		if (has(expr.arg(2), skey))
+		{
+			ret = ret || find_w_bound((!expr.arg(0)) && expr.arg(2), key, is_ub);
+		}
+	}
+	else if (kind == Z3_OP_NOT)
+	{
+		expr = expr.arg(0);
+		auto lk = expr.decl().decl_kind();
+		assert(lk == Z3_OP_GE || lk == Z3_OP_LE || kind == Z3_OP_EQ);
+		is_ub = !is_ub;
+		if (has(expr, skey))
+		{
+			if (has(expr.arg(0), skey) && 
+				( kind == Z3_OP_GE && !is_ub || kind == Z3_OP_LE && is_ub))
+			{
+				assert(!has(expr.arg(1), skey));
+				ret = !expr;
+			}
+			else if (has(expr.arg(1), skey) &&
+				( kind == Z3_OP_GE && is_ub || kind == Z3_OP_LE && !is_ub))
+			{
+				assert(!has(expr.arg(0), skey));
+				ret = !expr;
+			}
+			else if (kind == Z3_OP_EQ)
+			{
+				ret = !expr;
+			}
+		}
+	}
+	else
+	{
+		assert(kind == Z3_OP_GE || kind == Z3_OP_LE || kind == Z3_OP_EQ);
+		auto skey = key.to_string();
+		if (has(expr, skey))
+		{
+			if (has(expr.arg(0), skey) && 
+				( kind == Z3_OP_GE && !is_ub || kind == Z3_OP_LE && is_ub))
+			{
+				assert(!has(expr.arg(1), skey));
+				ret = expr;
+			}
+			else if (has(expr.arg(1), skey) &&
+				( kind == Z3_OP_GE && is_ub || kind == Z3_OP_LE && !is_ub))
+			{
+				assert(!has(expr.arg(0), skey));
+				ret = expr;
+			}
+			else if (kind == Z3_OP_EQ)
+			{
+				ret = expr;
+			}
+		}
+	}
+	return simplifyUseTactic(ret);
+}
+
+static z3::expr __rcw(z3::expr src)
+{
+	auto kind = src.decl().decl_kind();
+	auto ret = src.ctx().bool_val(false);
+	switch (kind)
+	{
+	case Z3_OP_AND:
+	{
+		ret = src.ctx().bool_val(true);
+		for (const auto& arg : src.args())
+		{
+			auto lk = arg.decl().decl_kind();
+			assert(lk == Z3_OP_GE || lk == Z3_OP_LE || lk == Z3_OP_EQ || lk == Z3_OP_ITE);
+			if (!has(arg, "__remove__"))
+			{
+				ret = ret && arg;
+			}
+		}
+		return ret;
+	}
+	case Z3_OP_ITE:
+	{
+		assert(src.get_sort().is_bool());
+		if (!has(src.arg(0), "__remove__"))
+		{
+			if (!has(src.arg(1), "__remove__"))
+			{
+				ret = __rcw(src.arg(0) && src.arg(1));
+			}
+			if (!has(src.arg(2), "__remove__"))
+			{
+				ret = ret || __rcw((!src.arg(0)) && src.arg(2));
+			}
+		}
+		return ret;
+	}
+	case Z3_OP_OR:
+	{
+		for (const auto& arg : src.args())
+		{
+			auto lk = arg.decl().decl_kind();
+			assert(lk == Z3_OP_GE || lk == Z3_OP_LE || lk == Z3_OP_EQ || lk == Z3_OP_ITE);
+			if (!has(arg, "__remove__"))
+			{
+				ret = ret || arg;
+			}
+		}
+		return ret;
+	}
+	default:
+		assert(false);
+	}
+
+}
+
+static z3::expr remove_comparison_with(z3::expr src, const z3::expr pat)
+{
+	auto& ctx = src.ctx();
+	z3::expr_vector pre_v(ctx);
+	z3::expr_vector post_v(ctx);
+	pre_v.push_back(pat);
+	post_v.push_back(ctx.int_const("__remove__"));
+	auto tmp = src.substitute(pre_v, post_v);
+	return __rcw(tmp);
+}
+
+bool ArraySetSolver::tryBypassTiling()
+{
+	bool bypass = true;
+	int tiled_dim=-1;
+	for (const auto& br : summary.branches)
+	{
+		// confirm all index are independent from t
+		for (int i = 0; i < br.index.size(); ++i)
+		{
+			auto subs = br.index[i].func;
+			bool indep = !has(br.index[i].func, "t");
+			if (indep && !has(br.index[i].func, "s_"))
+			{
+				tiled_dim = i;
+			}
+			bypass &= indep;
+		}
+	}
+	if (bypass)
+	{
+		// replace `t` with expr of `tm-1` and `0` in cond
+		for (auto& br : summary.branches)
+		{
+			//std::stringstream ss;
+			//ss << "tiled_" << tiled_dim;
+			z3::expr_vector tile_dst(z3ctx);
+			tile_dst.push_back(t.ctx().int_const("tm") - 1);
+			//br.cond = simplifyUseTactic(br.cond.substitute(v_t, tile_dst));
+			
+			auto lb_cond = find_w_bound(br.cond, w[tiled_dim], false).substitute(v_t, dst_0);
+			auto ub_cond = find_w_bound(br.cond, w[tiled_dim], true).substitute(v_t, tile_dst);
+			br.cond = simplifyUseTactic(remove_comparison_with(br.cond, t) && ub_cond && lb_cond);
+		}
+	}
+
+	return bypass;
+}
+
 bool ArraySetSolver::solve()
 {
 	initWriteCond();
@@ -92,7 +287,7 @@ void ArraySetSolver::initWriteCond()
 		write.writeCond = (0 <= t0 && t0 <= x && x <= t && t <= times - 1 && branch.cond).simplify();
 		write.index = branch.createIndexVector();
 #ifdef _DEBUG
-		std::cout << "index:\n" << write.index << std::endl;
+		std::cout << "WriteIndex:\n" << write.index << std::endl;
 		std::cout << "writeCond:\n"<< write.writeCond << std::endl;
 #endif // _DEBUG
 	}
@@ -151,10 +346,16 @@ bool ArraySetSolver::solveExistCond(ArrayWriteCond& write)
 		auto exist_write = write.writeCond;
 		exist_write = exist_write.substitute(v_x, v_y);
 		write.existCond = z3::exists(y, exist_write.simplify());
+		auto ec = simplifyUseTactic(write.writeCond.substitute(v_x, dst_sk) && write.skolemCond);
 #ifdef _DEBUG
 		std::cout << "existCondEquation:\n" << write.existCond << std::endl;
+		std::cout << "ec:\n" << ec << std::endl;
+		std::cout << "xs(" << xs.size() << ")\n";
+		for (const auto& x : xs) {
+			std::cout << x << std::endl;
+		}
+		std::cout << std::endl;
 #endif // _DEBUG
-		auto ec = simplifyUseTactic(write.writeCond.substitute(v_x, dst_sk) && write.skolemCond);
 		assert(proveEquals(write.existCond, xs.empty() ? ec : z3::exists(xs, ec)));
 		write.existCond = std::move(ec);
 #ifdef _DEBUG

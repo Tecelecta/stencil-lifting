@@ -1,0 +1,37 @@
+func Real[1:?] B = multiloadUnroll4(Real[0:?] A, Real[1:?] B, Integer NX)
+    var v1_up = Real()
+    var v1 = Real()
+    var v1_down = Real()
+    var v2_up = Real()
+    var v2 = Real()
+    var v2_down = Real()
+    var v3_up = Real()
+    var v3 = Real()
+    var v3_down = Real()
+    var v4_up = Real()
+    var v4 = Real()
+    var v4_down = Real()
+    var x = Integer()
+    
+    do x = 1, 1 + NX - 4, 4
+        v1_up = A[x-1]
+        v2_up = A[x]
+        v3_up = A[x+1]
+        v4_up = A[x-2]
+
+        v1 = A[x]
+        v2 = A[x+1]
+        v3 = A[x+2]
+        v4 = A[x+3]
+
+        v1_down = A[x+1]
+        v2_down = A[x+2]
+        v3_down = A[x+3]
+        v4_down = A[x+4]
+
+        B[x] = v1_up + v1 + v1_down
+        B[x+1] = v2_up + v2 + v2_down
+        B[x+2] = v3_up + v3 + v3_down
+        B[x+3] = v4_up + v4 + v4_down
+    end do
+end func
