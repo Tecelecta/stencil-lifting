@@ -28,7 +28,7 @@ public:
 
 	bool solve();
 
-	bool tryBypassTiling();
+	bool tryBypassTiling(const z3::expr);
 
 private:
 	void initWriteCond();

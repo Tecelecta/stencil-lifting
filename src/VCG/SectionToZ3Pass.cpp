@@ -246,6 +246,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 
 	visitInputValue = [this](InputValue* value, uint32_t i, const std::vector<SectionCall*>& callVector)
 		{
+#ifdef _DEBUG
+			std::cout << "bodyInput";
+#endif
 			assert(!callVector.empty());
 			auto z3_sort = typeVisitor(value->getType());
 			if (z3_sort)
@@ -290,6 +293,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 
 	visitBoundValue = [this](BoundValue* value, uint32_t i, const std::vector<SectionCall*>& callVector)
 		{
+#ifdef _DEBUG
+			std::cout << "InnerloopBound";
+#endif
 			if (auto loop = dynamic_cast<ParallelLoop*>(value->getSection()))
 			{
 				auto index = value->getIndex();
@@ -317,18 +323,27 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 				}
 				if (value->getOperation().getName().equals("array.getAt"))
 				{
+#ifdef _DEBUG
+					std::cout << "body ArrayGet";
+#endif
 					auto w = getArrayBound(this->z3ctx, value->getSrcVectorSize() - 1);
 					summaryVector[i] = createArrayGetSummary(callVector.size(), src_z3, w, z3_sort);
 					return true;
 				}
 				if (value->getOperation().getName().equals("array.setAt"))
 				{
+#ifdef _DEBUG
+					std::cout << "body ArraySet";
+#endif
 					auto w = getArrayBound(this->z3ctx, value->getSrcVectorSize() - 2);
 					summaryVector[i] = createArraySetSummary(callVector.size(), src_z3, w);
 					return true;
 				}
 				if (value->getOperation().getName().equals("tuple.getAt"))
 				{
+#ifdef _DEBUG
+					std::cout << "body TupleGet";
+#endif
 					auto tuple = value->getSrc(0);
 					z3::expr base = summaryVector[vertexId({ tuple, callVector })].branches[0].elem;
 					auto index = dynamic_cast<ConstantValue*>(value->getSrc(1))->getValue().cast<Integer>().getData().convert_to<size_t>();
@@ -364,6 +379,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 				auto op_iter = opMap.find(value->getOperation().getName().view());
 				if (op_iter != opMap.end())
 				{
+#ifdef _DEBUG
+					std::cout << "bodyOp";
+#endif
 					if (z3_sort.is_array())
 					{
 						assert(false);
@@ -410,6 +428,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 
 	visitResultValue = [this](ResultValue* value, uint32_t i, const std::vector<SectionCall*>& callVector)
 		{
+#ifdef _DEBUG
+			std::cout << "InnerloopResult";
+#endif
 			if (dynamic_cast<IterateLoop*>(value->getCall()->getCallee()) != nullptr)
 			{
 				return false;
@@ -423,6 +444,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 		{
 			if (auto branch = dynamic_cast<BinaryBranch*>(value->getSection()))
 			{
+#ifdef _DEBUG
+			std::cout << "bodyBranchPhi";
+#endif
 				auto cond_vertex = vertexId({ branch->getCondition(), callVector });
 				const auto& summary0 = summaryVector[cond_vertex];
 				const auto& summary1 = summaryVector[getOperandsByVertex(i)[0]];
@@ -482,6 +506,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 			}
 			else if (auto loop = dynamic_cast<ParallelLoop*>(value->getSection()))
 			{
+#ifdef _DEBUG
+				std::cout << "bodyInnerloopPhi";
+#endif
 				assert(value->getType().cast<ArrayType>() != nullptr);
 				auto& summary = summaryVector[i];
 				const auto& init_summary = summaryVector[getOperandsByVertex(i)[0]];
@@ -561,6 +588,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 
 	visitConstantValue = [this](ConstantValue* value, uint32_t i, const std::vector<SectionCall*>& callVector)
 		{
+#ifdef _DEBUG
+			std::cout << "bodyConst";
+#endif
 			auto z3_const = constantVisitor(value->getType(), value->getValue());
 			if (!(bool)z3_const)
 			{
@@ -590,6 +620,9 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 
 	visitInvalidValue = [this](InvalidValue* value, uint32_t i, const std::vector<SectionCall*>& callVector)
 		{
+#ifdef _DEBUG
+			std::cout << "bodyInvalid";
+#endif
 			auto z3_sort = typeVisitor(value->getType());
 			if (z3_sort)
 			{
@@ -614,26 +647,55 @@ bool SectionToZ3Pass::run()
 	return iterateSCC(*this);
 }
 
+#ifdef _DEBUG
+static const char* _section_class(Section* s)
+{
+	if (dynamic_cast<SimpleSection*>(s))
+	{
+		return "Simple";
+	}
+	else if (dynamic_cast<BinaryBranch*>(s))
+	{
+		return "BBranch";
+	}
+	else if (dynamic_cast<IterateLoop*>(s))
+	{
+		return "SLoop";
+	}
+	else if (dynamic_cast<ParallelLoop*>(s))
+	{
+		return "PLoop";
+	}
+}
+#endif
+
 bool SectionToZ3Pass::update(uint32_t i)
 {
 	if (summaryVector[i].form == Summary::Form::NONE)
 	{
 		const auto& path = vertexAt(i);
 #ifdef _DEBUG
-		std::cout << i << ": " << path.value->getName() << " <- ";
-		for (auto& dep : getOperandsByVertex(i)) {
-			std::cout << dep << " ";
+		std::cout << "Current Callpath: ";
+		for (const auto c: path.callVector)
+		{
+			std::cout << _section_class(c->getCaller()) << "->"
+				<< (c == path.callVector.back() ? _section_class(c->getCallee()) : "" );
 		}
 		std::cout << std::endl;
-#endif // _DEBUG
+#endif
 		if (!SectionToZ3Pass::operator()(path.value, i, path.callVector))
 		{
 #ifdef _DEBUG
-			std::cerr << "ERROR!!!" << std::endl;
+			std::cerr << " ERROR!!!" << std::endl;
 #endif // _DEBUG
 			return false;
 		}
 #ifdef _DEBUG
+		std::cout << " body." << i << ": " << path.value->getName() << " <- ";
+		for (auto& dep : getOperandsByVertex(i)) {
+			std::cout << "body." << dep << " ";
+		}
+		std::cout << std::endl;
 		std::cout << summaryVector[i].str() << std::endl;
 #endif // _DEBUG
 	}

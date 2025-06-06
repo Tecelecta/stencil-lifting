@@ -17,7 +17,7 @@ if __name__ == "__main__":
             with open(fortran_path, 'r', encoding="UTF-8") as fortran_file:
                 s = fortran_file.read().upper()
             ast = parser(FortranStringReader(s))
-            sdsl_path = "./tmp/%s.sdsl" % '.'.join(name.split('.')[:-1])
+            sdsl_path = "./sdsl_out/%s.sdsl" % '.'.join(name.split('.')[:-1])
             with open(sdsl_path, 'w', encoding="UTF-8") as sdsl_file:
                 sdsl_file.write("// " + fortran_path + "\n\n")
                 context = TranslateContext()

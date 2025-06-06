@@ -172,7 +172,7 @@ static z3::expr remove_comparison_with(z3::expr src, const z3::expr pat)
 	return __rcw(tmp);
 }
 
-bool ArraySetSolver::tryBypassTiling()
+bool ArraySetSolver::tryBypassTiling(const z3::expr it_times)
 {
 	bool bypass = true;
 	int tiled_dim=-1;
@@ -195,18 +195,21 @@ bool ArraySetSolver::tryBypassTiling()
 		// replace `t` with expr of `tm-1` and `0` in cond
 		for (auto& br : summary.branches)
 		{
-			//std::stringstream ss;
-			//ss << "tiled_" << tiled_dim;
 			z3::expr_vector tile_dst(z3ctx);
-			tile_dst.push_back(t.ctx().int_const("tm") - 1);
-			//br.cond = simplifyUseTactic(br.cond.substitute(v_t, tile_dst));
+			// tile_dst.push_back((it_times - 1).simplify());
 			
-			auto lb_cond = find_w_bound(br.cond, w[tiled_dim], false).substitute(v_t, dst_0);
-			auto ub_cond = find_w_bound(br.cond, w[tiled_dim], true).substitute(v_t, tile_dst);
-			br.cond = simplifyUseTactic(remove_comparison_with(br.cond, t) && ub_cond && lb_cond);
+			// auto lb_cond = find_w_bound(br.cond, w[tiled_dim], false).substitute(v_t, dst_0);
+			// auto ub_cond = find_w_bound(br.cond, w[tiled_dim], true).substitute(v_t, tile_dst);
+			// br.cond = simplifyUseTactic(remove_comparison_with(br.cond, t) && ub_cond && lb_cond);
+
+			z3::expr_vector tile_src(z3ctx);
+			std::stringstream ss;
+			ss << "b_" << tiled_dim+1;
+			tile_src.push_back(w[tiled_dim]);
+			tile_dst.push_back(z3ctx.int_const(ss.str().c_str()));
+			br.cond = simplifyUseTactic(br.cond.substitute(tile_src, tile_dst));
 		}
 	}
-
 	return bypass;
 }
 
