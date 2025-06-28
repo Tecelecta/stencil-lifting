@@ -10,6 +10,7 @@ def exec_dir(path):
             kname = fname[:-7] 
             ret = sp.run([os.path.join(root, fname)], capture_output=True, text=True)
             
+            print(f"Running {kname} ...")
             print("Process return value: %d" % ret.returncode)
             if ret.returncode != 0:
                 print("Output:\n %s" % ret.stderr)

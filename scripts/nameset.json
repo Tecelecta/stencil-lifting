@@ -44,5 +44,28 @@
         "mgl5",
         "resid1",
         "trilinear_proj"
+    ],
+    "wrf": [
+        "mdel3",
+        "mdel5",
+        "mdel6",
+        "mdel10",
+        "mdel13",
+        "mdel16",
+        "mdel18",
+        "mdel33",
+        "mdel35",
+        "mdel37"
+    ],
+    "mg": [
+        "mgl11",
+        "mgl12",
+        "mgl13",
+        "mgl14",
+        "mgl3",
+        "mgl6",
+        "mgl5",
+        "resid1",
+        "trilinear_proj"
     ]
 }
