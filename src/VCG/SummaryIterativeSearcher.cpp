@@ -1,4 +1,4 @@
-﻿#include "SummaryIterativeSearcher.h"
+#include "SummaryIterativeSearcher.h"
 #include "LoopParallelizePass.h"
 #include "ArraySetSolver.h"
 
@@ -364,20 +364,19 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         ArraySetSolver solver(z3ctx, t_times,
             z3Pass.vertexAt(sccOutput).value->getType().getNumDims(), z3Pass.summaryVector[sccOutput]);
 
-        if (solver.tryBypassTiling(t_times))
-        { 
+    //    if (solver.tryBypassTiling(t_times))
+        if (false)
+        {
 #ifdef _DEBUG
             std::cout << "Tiling detected\n";
 #endif // _DEBUG
             sccBypassList.insert(scc_count);
         }
-        // else
+        else
         {
             solver.solve();
         }
 #ifdef _DEBUG
-		// std::cout << sccOutput << ": " << z3Pass.vertexAt(sccOutput).value->getName() << std::endl;
-		// std::cout << solver.summary.str() << std::endl;
         VIZ(sccOutput, "ArrayWrite", z3Pass.vertexAt(sccOutput).value, z3Pass.getDependencyByVertex(sccOutput), solver.summary);
 #endif // _DEBUG
 		sccOutputSummary.emplace_back(std::move(solver.summary));
@@ -393,7 +392,7 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 #endif
         for (size_t index = 0; index < phiValueVector.size(); index++)
         {
-            if (sccBypassList.find(index) != sccBypassList.end()) continue;
+            if (sccBypassList.find((int)index) != sccBypassList.end()) continue;
 
             auto v = sccInputList[index];
             auto ast = (Z3_ast)z3Pass.summaryVector[v].base;

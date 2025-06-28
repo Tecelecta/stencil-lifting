@@ -1,4 +1,4 @@
-﻿#include "ArraySetSolver.h"
+#include "ArraySetSolver.h"
 
 ArraySetSolver::ArraySetSolver(z3::context& z3ctx, z3::expr times, size_t numDims, Summary summary)
 	: z3ctx(z3ctx), w(getArrayBound(z3ctx, numDims)),
