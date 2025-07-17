@@ -1,4 +1,4 @@
-﻿#include "SMT.h"
+#include "SMT.h"
 
 bool proveTrue(z3::expr a)
 {
@@ -86,10 +86,11 @@ z3::expr simplifyUseTactic(z3::expr src, bool elim_and)
 }
 
 void solveAffine(z3::expr y, z3::expr_vector src_x, z3::expr_vector dst_0, z3::expr_vector dst_1,
-	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant)
+	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant, int step)
 {
 	assert(src_x.size() == 1 && dst_0.size() == 1 && dst_1.size() == 1);
-	auto x = src_x[0];
+    dst_1[0] = dst_1[0];
+    auto x = src_x[0];
 	if (isFunctionOf(y, x))
 	{
 		auto y0 = y.substitute(src_x, dst_0);
@@ -107,4 +108,24 @@ void solveAffine(z3::expr y, z3::expr_vector src_x, z3::expr_vector dst_0, z3::e
 		isAffine = true;
 		isConstant = true;
 	}
+}
+
+static void _find_nonunit_step(z3::expr expr, z3::expr& outer, z3::expr& inner, z3::expr& scale)
+{
+    if (expr.is_const())
+    {
+        return;
+    }
+    else
+    {
+        auto kind = expr.decl().decl_kind();
+        if (kind == Z3_OP_IDIV)
+        {
+        }
+    }
+}
+
+z3::expr looseNonUnitStep(const z3::expr& expr)
+{
+    
 }

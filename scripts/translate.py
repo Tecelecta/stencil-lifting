@@ -182,7 +182,7 @@ class TranslateContext:
             if len(array_dims) == 0 and ast.children[1]:
                 array_dims = self.translate_AST_Class(ast.children[1])  # Array_Spec
             elif ast.children[1]:
-                raise "混用两种数组声明语法"
+                raise "Mixing 2 types of array declaration"
             var_name = str(ast.get_name())
             init_val = self.translate_AST_Class(ast.children[3]) if ast.children[3] else None
             if isinstance(self.decl_dict.get(var_name, None), sdsl.FuncDecl):
@@ -228,7 +228,7 @@ class TranslateContext:
             if len(array_dims) == 0 and ast.children[1]:
                 array_dims = self.translate_AST_Class(ast.children[1])  # Array_Spec
             elif ast.children[1]:
-                raise "混用两种数组声明语法"
+                raise "Mixing 2 types of array declaration"
             elem_name = str(ast.children[0])
             init_val = self.translate_AST_Class(ast.children[3]) if ast.children[3] else None
             return sdsl.VarDecl(elem_type, self.is_local, elem_name, array_dims, None, init_val)

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "CopySectionPass.h"
 #include "SectionToZ3Pass.h"
@@ -58,4 +58,6 @@ private:
 	SectionToZ3Pass z3Pass;
 	std::unordered_map<Z3_ast, Summary> summaryMap;
 	LoopParallelizePass parallelizePass;
+    
+    z3::expr mkInnerTileBound(z3::expr cond, const z3::expr& lb, const z3::expr& ub, const z3::expr& scale);
 };

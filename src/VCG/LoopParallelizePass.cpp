@@ -1,4 +1,4 @@
-﻿#include "LoopParallelizePass.h"
+#include "LoopParallelizePass.h"
 #include "Context.h"
 
 #ifdef _DEBUG
@@ -10,7 +10,7 @@ std::string viz_z3(z3::expr expr) {
 }
 #endif
 
-#define STEP 4
+//#define STEP 4
 
 LoopParallelizePass::LoopParallelizePass(z3::context& z3ctx) : z3ctx(z3ctx)
 {
@@ -126,9 +126,10 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 	{
 		for (uint32_t i = 0; i < branch.index.size(); i++)
 		{
-			if (proveEquals(w[i], branch.index[i].func)
-				|| proveEquals((w[i]-STEP)/STEP*STEP+STEP, branch.index[i].func))
-			{
+//			if (proveEquals(w[i], branch.index[i].func)
+//				|| proveEquals((w[i]-STEP)/STEP*STEP+STEP, branch.index[i].func))
+			if (has(branch.index[i].func, "w_"))
+            {
 				if (!isLoop.at(i))
 				{
 					isLoop[i] = true;
@@ -458,7 +459,7 @@ Value* LoopParallelizePass::translateExpr(z3::expr expr, SimpleSection::Builder 
 						throw std::logic_error("需要创建bound value");
 					} else {
 						std::cerr << expr << std::endl;
-						throw std::logic_error("找不到操作数");
+						throw std::logic_error("Operand not found");
 					}
 				}
 				return tupleGet;
@@ -485,7 +486,7 @@ Value* LoopParallelizePass::translateExpr(z3::expr expr, SimpleSection::Builder 
 #ifdef _DEBUG
 	std::cerr << expr << std::endl;
 #endif // _DEBUG
-	throw std::logic_error("不支持的算子");
+	throw std::logic_error("Unsupported operator");
 }
 
 Value* LoopParallelizePass::translateRelationExpr(z3::expr expr, SimpleSection::Builder builder,

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "SMT.h"
 
@@ -27,6 +27,7 @@ public:
 		z3::expr func;
 		std::optional<z3::expr> bound;
 		std::optional<z3::expr> skolem_b;
+        std::optional<z3::expr> restore_w;
 	};
 
 	struct Branch
@@ -85,3 +86,36 @@ Summary createArrayGetSummary(size_t layer, const std::vector<Summary>& srcVecto
 Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVector, const z3::expr_vector& arrayBound);
 
 z3::expr_vector getArrayBound(z3::context& z3ctx, size_t dims);
+
+static inline bool has(const z3::expr& expr, const std::string& key)
+{
+    return expr.to_string().find(key) != std::string::npos;
+}
+
+static inline z3::expr find_const_subexpr(const z3::expr& expr, const std::string& key)
+{
+    if (expr.is_const())
+    {
+        if ( has(expr, key) )
+        {
+            return expr;
+        }
+        else
+        {
+            return expr.ctx().bool_val(false);
+        }
+    }
+    else
+    {
+        auto ret = find_const_subexpr(expr.arg(0), key);
+        for (int i=1; i<expr.num_args(); i++)
+        {
+            if (!ret.is_false())
+            {
+                return ret;
+            }
+            ret = find_const_subexpr(expr.arg(i), key);
+        }
+        return ret;
+    }
+}

@@ -1,4 +1,4 @@
-﻿#include "Summary.h"
+#include "Summary.h"
 
 #include <sstream>
 
@@ -154,6 +154,25 @@ void Summary::addBranch(Branch src_branch)
 	branches.emplace_back(std::move(src_branch));
 }
 
+static bool identical(z3::expr a, z3::expr b)
+{
+    if (a.is_const())
+    {
+        return proveEquals(a, b);
+    }
+    else
+    {
+        a = a.simplify();
+        b = b.simplify();
+        bool id = (a.num_args() == b.num_args());
+        for (int i=0; i<a.num_args() && id; i++)
+        {
+            id = id && identical(a.arg(i), b.arg(i));
+        }
+        return id;
+    }
+}
+
 bool Summary::canMerge(const Summary::Branch& a, const Summary::Branch& b)
 {
 	switch (form)
@@ -169,7 +188,8 @@ bool Summary::canMerge(const Summary::Branch& a, const Summary::Branch& b)
 		}
 		for (uint32_t i = 0; i < a.index.size(); i++)
 		{
-			if ((Z3_ast)a.index[i].func != (Z3_ast)b.index[i].func)
+//            if ((Z3_ast)a.index[i].func != (Z3_ast)b.index[i].func)
+			if (! identical(a.index[i].func, b.index[i].func))
 			{
 				return false;
 			}
@@ -367,6 +387,8 @@ Summary createArrayGetSummary(size_t layer, const std::vector<Summary>& srcVecto
 	return result;
 }
 
+static bool is_unrolled(z3::context&, Summary::Branch& src, Summary::Branch& dst, z3::expr*&);
+
 static void createArraySetSummary(Summary& result, size_t layer, const std::vector<Summary>& srcVector,
 	const z3::expr_vector& arrayBound, z3::expr cond, std::vector<Summary::WriteIndex>& writeIndex)
 {
@@ -409,8 +431,6 @@ static void createArraySetSummary(Summary& result, size_t layer, const std::vect
 	}
 }
 
-bool is_unrolled(z3::context&, Summary::Branch& src, Summary::Branch& dst, z3::expr*&);
-
 Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVector, const z3::expr_vector& arrayBound)
 {
 	auto& z3ctx = arrayBound.ctx();
@@ -446,7 +466,7 @@ Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVecto
 			result.mergeBranch({ remain_cond, branch.elem, branch.layer, branch.index, branch.skolem_x });
 		}
 	}
-	if (unroll_offset_token == nullptr)
+	if (unroll_offset_token != nullptr)
 	{
 		delete unroll_offset_token;
 	}
@@ -464,7 +484,25 @@ void index_diff(const std::vector<Summary::WriteIndex>& a,
 	}
 }
 
-bool is_unrolled(const z3::expr a, const z3::expr b, const z3::expr off, const int dim, 
+std::vector<z3::expr> getArrayBound(size_t dims)
+{
+	return std::vector<z3::expr>();
+}
+
+z3::expr_vector getArrayBound(z3::context& z3ctx, size_t dims)
+{
+	z3::expr_vector w(z3ctx);
+	for (size_t i = 0; i < dims; i++)
+	{
+		std::stringstream ss;
+		ss << "w_" << i + 1;
+		w.push_back(z3ctx.int_const(ss.str().c_str()));
+	}
+	return w;
+}
+
+
+static bool is_unrolled(const z3::expr a, const z3::expr b, const z3::expr off, const int dim, 
 				 z3::expr_vector& a_subs, z3::expr_vector& b_subs)
 {
 	auto kind = a.decl().decl_kind();
@@ -504,7 +542,7 @@ bool is_unrolled(const z3::expr a, const z3::expr b, const z3::expr off, const i
 }
 
 
-bool is_unrolled(z3::context& z3ctx, Summary::Branch& src, Summary::Branch& dst, z3::expr*& range_token) 
+static bool is_unrolled(z3::context& z3ctx, Summary::Branch& src, Summary::Branch& dst, z3::expr*& range_token) 
 {
 	// traverse dims to find the unrolled dim
 	bool detect = false;
@@ -554,19 +592,3 @@ bool is_unrolled(z3::context& z3ctx, Summary::Branch& src, Summary::Branch& dst,
 	return detect;
 }
 
-std::vector<z3::expr> getArrayBound(size_t dims)
-{
-	return std::vector<z3::expr>();
-}
-
-z3::expr_vector getArrayBound(z3::context& z3ctx, size_t dims)
-{
-	z3::expr_vector w(z3ctx);
-	for (size_t i = 0; i < dims; i++)
-	{
-		std::stringstream ss;
-		ss << "w_" << i + 1;
-		w.push_back(z3ctx.int_const(ss.str().c_str()));
-	}
-	return w;
-}

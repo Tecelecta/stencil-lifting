@@ -43,7 +43,7 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("int.trunc"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持的目标整数类型")
+			ERROR("In cast operation: unsupported target integer type")
 		}
 		else if (isFloatType(dstType, dstBits))
 		{
@@ -52,9 +52,9 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("int.2float"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持的目标浮点数类型")
+			ERROR("In cast operation: unsupported target floating point type")
 		}
-		ERROR("在进行类型转换时，不支持当前目标类型")
+		ERROR("In cast operation: unsupported target type")
 	}
 	else if (srcType == context->getRealType())
 	{
@@ -65,7 +65,7 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("float.2int"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持的目标整数类型")
+			ERROR("In cast operation: unsupported target integer type")
 		}
 		else if (isFloatType(dstType, dstBits))
 		{
@@ -74,9 +74,9 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("float.trunc"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持的目标浮点数类型")
+			ERROR("In cast operation: unsupported target floating point type")
 		}
-		ERROR("在进行类型转换时，不支持当前目标类型")
+		ERROR("In cast operation: unsupported target type")
 	}
 	else if (isIntType(srcType, srcBits))
 	{
@@ -95,7 +95,7 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getCopyOperation(dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持将当前类型的整数转换为目标整数类型")
+			ERROR("In cast operation: casting current operand to target integer type is not allowed")
 		}
 		else if (isFloatType(dstType, dstBits))
 		{
@@ -104,9 +104,9 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("int.2float"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持将当前类型的整数转换为目标浮点数类型")
+			ERROR("In cast operation: casting current integer type to target floating point type is not allowed")
 		}
-		ERROR("在进行类型转换时，不支持当前目标类型")
+		ERROR("In cast operation: unsupported target type")
 	}
 	else if (isFloatType(srcType, srcBits))
 	{
@@ -117,7 +117,7 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getOperation(context->getString("float.2int"), { srcType }, dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持将当前类型的浮点数转换为目标整数类型")
+			ERROR("In cast operation: casting current floating point type to target integer type is not allowed")
 		}
 		else if (isFloatType(dstType, dstBits))
 		{
@@ -134,14 +134,14 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 				return context->getCopyOperation(dstType);
 			}
 			isBasicType = false;
-			ERROR("在进行类型转换时，不支持将当前类型的浮点数转换为目标浮点数类型")
+			ERROR("In cast operation: casting current floating point type to target floating point type is not allowed")
 		}
-		ERROR("在进行类型转换时，不支持当前目标类型")
+		ERROR("In cast operation: unsupported target type")
 	}
 	else
 	{
 		isBasicType = false;
-		ERROR("在进行类型转换时，不支持当前源操作数类型")
+		ERROR("In cast operation: unsupported source type")
 	}
 }
 
@@ -285,7 +285,7 @@ Operation OperationMatcher::matchAssignmentOperation(
 	size_t rightBits = 0;
 	if (leftIsImm)
 	{
-		ERROR("在进行赋值运算时，不支持对立即数进行赋值")
+		ERROR("In assignment: assigning to literature is not allowed")
 	}
 	if (isIntType(leftType, leftBits))
 	{
@@ -306,7 +306,7 @@ Operation OperationMatcher::matchAssignmentOperation(
 		{
 			return context->getCopyOperation(leftType);
 		}
-		ERROR("在进行赋值运算时，不支持将当前类型赋给整型操作数")
+		ERROR("In assignment: assigning current operand to integer value is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -326,9 +326,9 @@ Operation OperationMatcher::matchAssignmentOperation(
 		{
 			return context->getOperation(context->getString("float.trunc"), { rightType }, leftType);
 		}
-		ERROR("在进行赋值运算时，不支持将当前类型赋给浮点型操作数")
+		ERROR("In assignment: assigning current operand to floating point value is not allowed")
 	}
-	ERROR("在进行赋值运算时，不支持当前类型的操作数")
+	ERROR("In assignment: current operand type is not allowed")
 	// TODO: 考虑integer promotion
 }
 
@@ -354,7 +354,7 @@ Operation OperationMatcher::matchUnaryArithmeticOperation(
 	{
 		return context->getOperation(context->getString("Real." + op), { rightType }, rightType);
 	}
-	ERROR("在进行算术运算时，不支持当前类型的操作数")
+	ERROR("In arithmetic: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchBinaryArithmeticOperation(
@@ -406,7 +406,7 @@ Operation OperationMatcher::matchBinaryArithmeticOperation(
 				return context->getOperation(context->getString("float." + op), { rightType, rightType }, rightType);
 			}
 		}
-		ERROR("在进行算术运算时，不支持将大整型和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation between big int operand and current operand type is not allowed")
 	}
 	else if (leftType == context->getRealType())
 	{
@@ -422,7 +422,7 @@ Operation OperationMatcher::matchBinaryArithmeticOperation(
 				return context->getOperation(context->getString("float." + op), { rightType, rightType }, rightType);
 			}
 		}
-		ERROR("在进行算术运算时，不支持将实型和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation between real operand and current operand type is not allowed")
 	}
 	else if (isIntType(leftType, leftBits))
 	{
@@ -457,9 +457,9 @@ Operation OperationMatcher::matchBinaryArithmeticOperation(
 				rightCast = context->getOperation(context->getString("Real.2int"), { rightType }, leftType);
 				return context->getOperation(context->getString("int." + sop), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行算术运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In arithmetic: operation between integer operand and current literature type is not allowed")
 		}
-		ERROR("在进行算术运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation between integer type and current operand type is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -494,11 +494,11 @@ Operation OperationMatcher::matchBinaryArithmeticOperation(
 				rightCast = context->getOperation(context->getString("Real.2float"), { rightType }, leftType);
 				return context->getOperation(context->getString("float." + op), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行算术运算时，不支持将浮点型操作数和当前类型的立即数进行运算")
+			ERROR("In arithmetic: operation between floating point operand and current literature type is not allowed")
 		}
-		ERROR("在进行算术运算时，不支持将浮点型操作数和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation floating point operand and current operand type is not allowed")
 	}
-	ERROR("在进行算术运算时，不支持当前类型的操作数")
+	ERROR("In arithmetic: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchUnaryLogicalOperation(
@@ -510,7 +510,7 @@ Operation OperationMatcher::matchUnaryLogicalOperation(
 	{
 		return context->getOperation(context->getString(op), { rightType }, context->getLogicType());
 	}
-	ERROR("在进行逻辑运算时，不支持非逻辑运算的操作数")
+	ERROR("In logic arithmetic: non-logic operand is not allowed")
 }
 
 Operation OperationMatcher::matchBinaryLogicalOperation(
@@ -524,7 +524,7 @@ Operation OperationMatcher::matchBinaryLogicalOperation(
 	{
 		return context->getOperation(context->getString(op), { leftType, rightType }, context->getLogicType());
 	}
-	ERROR("在进行逻辑运算时，不支持非逻辑运算的操作数")
+	ERROR("In logic arithmetic: non-logic operand is not allowed")
 }
 
 Operation OperationMatcher::matchUnaryBitwiseOperation(
@@ -537,7 +537,7 @@ Operation OperationMatcher::matchUnaryBitwiseOperation(
 	{
 		return context->getOperation(context->getString(op), { rightType }, rightType);
 	}
-	ERROR("在进行位运算时，不支持当前类型的操作数")
+	ERROR("In bit operation: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchBinaryBitwiseOperation(
@@ -562,9 +562,9 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 				leftCast = context->getOperation(context->getString("Integer.2int"), { leftType }, rightType);
 				return context->getOperation(context->getString(op), { rightType, rightType }, rightType);
 			}
-			ERROR("在进行位运算时，不支持将大整形立即数和当前类型的操作数进行运算")
+			ERROR("In bit operation: operation between big int literature and current operand type is not allowed")
 		}
-		ERROR("在进行位运算时，不支持当前类型的立即数")
+		ERROR("In bit operation: current literature type is not allowed")
 	}
 	else if (isIntType(leftType, leftBits))
 	{
@@ -574,7 +574,7 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, leftType);
 			}
-			ERROR("在进行位运算时，操作数的位宽不匹配")
+			ERROR("In bit operation: operand bit-width not match")
 		}
 		else if (isFloatType(rightType, rightBits)) // 掩码运算
 		{
@@ -582,7 +582,7 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, rightType);
 			}
-			ERROR("在进行位运算时，操作数的位宽不匹配")
+			ERROR("In bit operation: operand bit-width not match")
 		}
 		else if (rightIsImm)
 		{
@@ -591,9 +591,9 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 				rightCast = context->getOperation(context->getString("Integer.2int"), { leftType }, rightType);
 				return context->getOperation(context->getString(op), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行位运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In bit operation: operation between integer type and current literature type is not allowed")
 		}
-		ERROR("在进行位运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In bit operation: operation between integer type and current operand type is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -603,11 +603,11 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, leftType);
 			}
-			ERROR("在进行位运算时，操作数的位宽不匹配")
+			ERROR("In bit operation: operand bit-width not match")
 		}
-		ERROR("在进行位运算时，不支持将浮点型操作数和当前类型的操作数进行运算")
+		ERROR("In bit operation: operation between floating point operand and current operand type is not allowed")
 	}
-	ERROR("在进行位运算时，不支持当前类型的操作数")
+	ERROR("In bit operation: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchShiftOperation(
@@ -620,7 +620,7 @@ Operation OperationMatcher::matchShiftOperation(
 {
 	if (leftIsImm)
 	{
-		ERROR("在进行位移运算时，不支持对立即数进行赋值")
+		ERROR("In shifting operation: assigning to literature is not allowed")
 	}
 	Type shiftType = context->getInt8Type();
 	size_t leftBits = 0;
@@ -634,7 +634,7 @@ Operation OperationMatcher::matchShiftOperation(
 				rightCast = context->getOperation(context->getString("Integer.2int"), { leftType }, shiftType);
 				return context->getOperation(context->getString(op), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行位移运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In shifting operation: operation between integer type and current literature type is not allowed")
 		}
 		else if (isIntType(rightType, rightBits))
 		{
@@ -645,9 +645,9 @@ Operation OperationMatcher::matchShiftOperation(
 			}
 			return context->getOperation(context->getString(op), { leftType, rightType }, leftType);
 		}
-		ERROR("在进行位移运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In shifting operation: operation between integer type and current operand type is not allowed")
 	}
-	ERROR("在进行位移运算时，不支持当前类型的操作数")
+	ERROR("In shifting operation: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->RealType ; a < 1.5 -> a <= 1
@@ -690,7 +690,7 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 				rightCast = context->getOperation(context->getString("Integer.2int"), { rightType }, leftType);
 				return context->getOperation(context->getString("int." + sop), { leftType, leftType }, logicType);
 			}
-			ERROR("在进行关系运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In relation operation: operation between integer operand and current literature type is not allowed")
 		}
 		else if (isIntType(rightType, rightBits))
 		{
@@ -698,9 +698,9 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, logicType);
 			}
-			ERROR("在进行关系运算时，操作数的位宽不匹配")
+			ERROR("In relation operation: operand bit-width not match")
 		}
-		ERROR("在进行关系运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In relation operation: operation between integer and current operand type is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -710,7 +710,7 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 			{
 				return context->getOperation(context->getString("float." + op), { leftType, rightType }, logicType);
 			}
-			ERROR("在进行关系运算时，操作数的位宽不匹配")
+			ERROR("In relation operation: operand bit-width not match")
 		}
 		else if (rightIsImm)
 		{
@@ -719,9 +719,9 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 				rightCast = context->getOperation(context->getString("Real.2float"), { rightType }, leftType);
 				return context->getOperation(context->getString("float." + op), { leftType, leftType }, logicType);
 			}
-			ERROR("在进行关系运算时，不支持将浮点型操作数和当前类型的立即数进行运算")
+			ERROR("In relation operation: operation between floating point operand and current literature type is not allowed")
 		}
-		ERROR("在进行关系运算时，不支持将浮点型操作数和当前类型的操作数进行运算")
+		ERROR("In relation operation: operation between floating point operand and current operand type is not allowed")
 	}
 	else if (leftIsImm)
 	{
@@ -736,7 +736,7 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 				leftCast = context->getOperation(context->getString("Integer.2int"), { leftType }, rightType);
 				return context->getOperation(context->getString("int." + sop), { rightType, rightType }, logicType);
 			}
-			ERROR("在进行比较运算时，不支持将大整形立即数和当前类型的操作数进行运算")
+			ERROR("In comparison: comparison between big int literature and current operand type is not allowed")
 		}
 		else if (leftType == context->getRealType())
 		{
@@ -749,11 +749,11 @@ Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->R
 				leftCast = context->getOperation(context->getString("Real.2float"), { leftType }, rightType);
 				return context->getOperation(context->getString("float." + op), { rightType, rightType }, logicType);
 			}
-			ERROR("在进行比较运算时，不支持将实型立即数和当前类型的操作数进行运算")
+			ERROR("In comparison: comparison with real literature type and current operand type is not allowed")
 		}
-		ERROR("在进行关系运算时，不支持将当前类型的立即数和操作数进行运算")
+		ERROR("In relation operation: operation between current literature type and operand type is not allowed")
 	}
-	ERROR("在进行关系运算时，不支持当前类型的操作数")
+	ERROR("In relation operation: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchArithmeticAssignmentOperation(
@@ -768,7 +768,7 @@ Operation OperationMatcher::matchArithmeticAssignmentOperation(
 	size_t rightBits = 0;
 	if (leftIsImm)
 	{
-		ERROR("在进行赋值运算时，不支持对立即数进行赋值")
+		ERROR("In assignment: assigning to literature is not allowed")
 	}
 	if (leftType == context->getRealType())
 	{
@@ -817,9 +817,9 @@ Operation OperationMatcher::matchArithmeticAssignmentOperation(
 				rightCast = context->getOperation(context->getString("Real.2int"), { rightType }, leftType);
 				return context->getOperation(context->getString("int." + sop), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行算术运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In arithmetic: operation between integer operand and current literature type is not allowed")
 		}
-		ERROR("在进行算术运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation between integer type and current operand type is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -854,11 +854,11 @@ Operation OperationMatcher::matchArithmeticAssignmentOperation(
 				rightCast = context->getOperation(context->getString("Real.2float"), { rightType }, leftType);
 				return context->getOperation(context->getString("float." + op), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行算术运算时，不支持将浮点型操作数和当前类型的立即数进行运算")
+			ERROR("In arithmetic: operation between floating point operand and current literature type is not allowed")
 		}
-		ERROR("在进行算术运算时，不支持将浮点型操作数和当前类型的操作数进行运算")
+		ERROR("In arithmetic: operation floating point operand and current operand type is not allowed")
 	}
-	ERROR("在进行算术运算时，不支持当前类型的操作数")
+	ERROR("In arithmetic: current operand type is not allowed")
 }
 
 Operation OperationMatcher::matchBitwiseAssignmentOperation(
@@ -872,7 +872,7 @@ Operation OperationMatcher::matchBitwiseAssignmentOperation(
 	size_t rightBits = 0;
 	if (leftIsImm)
 	{
-		ERROR("在进行赋值运算时，不支持对立即数进行赋值")
+		ERROR("In assignment: assigning to literature is not allowed")
 	}
 	else if (isIntType(leftType, leftBits))
 	{
@@ -882,7 +882,7 @@ Operation OperationMatcher::matchBitwiseAssignmentOperation(
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, leftType);
 			}
-			ERROR("在进行位运算时，操作数的位宽不匹配")
+			ERROR("In bit operation: operand bit-width not match")
 		}
 		else if (rightIsImm)
 		{
@@ -891,9 +891,9 @@ Operation OperationMatcher::matchBitwiseAssignmentOperation(
 				rightCast = context->getOperation(context->getString("Integer.2int"), { leftType }, rightType);
 				return context->getOperation(context->getString(op), { leftType, leftType }, leftType);
 			}
-			ERROR("在进行位运算时，不支持将整型操作数和当前类型的立即数进行运算")
+			ERROR("In bit operation: operation between integer type and current literature type is not allowed")
 		}
-		ERROR("在进行位运算时，不支持将整型操作数和当前类型的操作数进行运算")
+		ERROR("In bit operation: operation between integer type and current operand type is not allowed")
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
@@ -903,9 +903,9 @@ Operation OperationMatcher::matchBitwiseAssignmentOperation(
 			{
 				return context->getOperation(context->getString(op), { leftType, rightType }, leftType);
 			}
-			ERROR("在进行位运算时，操作数的位宽不匹配")
+			ERROR("In bit operation: operand bit-width not match")
 		}
-		ERROR("在进行位运算时，不支持将浮点型操作数和当前类型的操作数进行运算")
+		ERROR("In bit operation: operation between floating point operand and current operand type is not allowed")
 	}
-	ERROR("在进行位运算时，不支持当前类型的操作数")
+	ERROR("In bit operation: current operand type is not allowed")
 }

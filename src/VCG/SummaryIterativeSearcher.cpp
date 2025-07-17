@@ -364,8 +364,8 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         ArraySetSolver solver(z3ctx, t_times,
             z3Pass.vertexAt(sccOutput).value->getType().getNumDims(), z3Pass.summaryVector[sccOutput]);
 
-    //    if (solver.tryBypassTiling(t_times))
-        if (false)
+//        if (solver.tryBypassTiling(t_times))
+         if (false)
         {
 #ifdef _DEBUG
             std::cout << "Tiling detected\n";
@@ -517,7 +517,8 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         for (auto& branch : s2.branches)
         {
             auto w = getArrayBound(z3ctx, branch.index.size());
-            branch.cond = branch.cond.substitute(w, branch.createIndexVector()).simplify();
+            branch.cond = branch.cond.substitute(w, branch.createIndexVector());
+            branch.cond = branch.cond.simplify();
             branch.cond = simplifyUseTactic(branch.cond && 0 <= t && t <= t_times - 1);
             branch.elem = branch.elem.substitute(w, branch.createIndexVector()).simplify();
         }
@@ -782,14 +783,23 @@ Summary SummaryIterativeSearcher::propagateSkolemB(const Summary& invar)
     Summary result = invar;
     z3::expr_vector src_b(z3ctx);
     z3::expr_vector dst_sk(z3ctx);
+    z3::expr_vector tile_src_b(z3ctx);
+    z3::expr_vector tile_dst_sk(z3ctx);
     for (auto& branch : result.branches)
     {
         for (const auto& index : branch.index)
         {
             if (index.bound.has_value() && index.skolem_b.has_value())
             {
+                auto skolem_b = index.skolem_b.value();
+                if (has(skolem_b, "t"))
+                {
+                    tile_src_b.push_back(index.bound.value());
+                    tile_dst_sk.push_back(skolem_b.substitute(v_t, v_x));
+                }
                 src_b.push_back(index.bound.value());
-                dst_sk.push_back(index.skolem_b.value());
+                dst_sk.push_back(skolem_b);
+                
             }
         }
     }
@@ -803,13 +813,58 @@ Summary SummaryIterativeSearcher::propagateSkolemB(const Summary& invar)
         {
             branch.cond = simplifyUseTactic(branch.cond.substitute(src_b, dst_sk));
             branch.elem = branch.elem.substitute(src_b, dst_sk).simplify();
+
             for (uint32_t j = 0; j < branch.index.size(); j++)
             {
+                if ( !tile_src_b.empty() )
+                {
+                    branch.index[j].func = branch.index[j].func.substitute(tile_src_b, tile_dst_sk).simplify();
+                }
                 branch.index[j].func = branch.index[j].func.substitute(src_b, dst_sk).simplify();
             }
         }
     }
     return result;
+}
+
+z3::expr SummaryIterativeSearcher::mkInnerTileBound(z3::expr cond,
+                                                    const z3::expr& lb,
+                                                    const z3::expr& ub,
+                                                    const z3::expr& scale)
+{
+    assert(cond.is_bool());
+    
+    auto kind = cond.decl().decl_kind();
+    if (kind == Z3_OP_GE &&
+        has(cond.arg(0), "t") &&
+        has(cond.arg(0), "w_"))
+    {
+        z3::expr_vector dst_lb(cond.ctx());
+        dst_lb.push_back(lb / scale);
+        return cond.substitute(v_t, dst_lb);
+    }
+    else if (kind == Z3_OP_LE &&
+             has(cond.arg(0), "t") &&
+             has(cond.arg(0), "w_"))
+    {
+        z3::expr_vector dst_ub(cond.ctx());
+        dst_ub.push_back(ub / scale);
+        return cond.substitute(v_t, dst_ub);
+    }
+    z3::expr ret = cond;
+    for(auto arg : cond.args())
+    {
+        if (arg.is_bool())
+        {
+            z3::expr_vector src(cond.ctx());
+            z3::expr_vector dst(cond.ctx());
+            src.push_back(arg);
+            dst.push_back(mkInnerTileBound(arg, lb, ub, scale));
+            ret = ret.substitute(src, dst);
+        }
+    }
+    return ret;
+    
 }
 
 Summary SummaryIterativeSearcher::getPostCond(const Summary& invar)
@@ -825,14 +880,38 @@ Summary SummaryIterativeSearcher::getPostCond(const Summary& invar)
     {
         z3::expr cond = branch.cond;
         z3::expr elem = branch.elem;
+        if (has(elem, "b_"))
+        {
+            printf("wtf??\n");
+            std::cout << invar.str() << std::endl;
+        }
         std::vector<Summary::WriteIndex> index = branch.index;
+        
+        auto tiling_cond = mkInnerTileBound(cond, t_begin, t_times, t_step);
+        if (!proveEquals(tiling_cond, cond))
+        {
+            cond = tiling_cond.simplify();
+        }
+        
         cond = simplifyUseTactic(cond.substitute(v_t, dst_times));
         elem = elem.substitute(v_t, dst_times).simplify();
-        z3::expr_vector dst_sk(z3ctx);
+        
+        z3::expr_vector dst_sk(z3ctx), src_skw(z3ctx), dst_skw(z3ctx);
         dst_sk.push_back(branch.skolem_x.value());
+        
         for (uint32_t j = 0; j < index.size(); j++)
         {
             index[j].func = index[j].func.substitute(v_x, dst_sk).simplify();
+            if (index[j].restore_w.has_value())
+            {
+                const auto& rw = index[j].restore_w.value();
+                auto w = getArrayBound(z3ctx, index.size());
+                dst_skw.push_back(rw);
+                src_skw.push_back(w[j]);
+                index[j].func = index[j].func.substitute(src_skw, dst_skw).simplify();
+                elem = elem.substitute(src_skw, dst_skw).simplify();
+                cond = cond.substitute(src_skw, dst_skw).simplify();
+            }
         }
         result.mergeBranch({ cond, elem, branch.layer, index });
     }

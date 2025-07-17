@@ -1,4 +1,4 @@
-﻿#include "SectionToZ3Pass.h"
+#include "SectionToZ3Pass.h"
 
 inline z3::expr createUnaryOp(const std::vector<z3::expr>& src, std::function<z3::expr(z3::expr)> op)
 {
@@ -53,6 +53,10 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 					return Summary::Form::RANGE;
 				}
 			}
+            else if (src[1] == src[2])
+            {
+                return src[1];
+            }
 			return Summary::Form::ELEM;
 		};
 
@@ -114,6 +118,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 	formMap["Integer.sub"] = formMap["int.sub"] = formMap["Integer.mul"] = formMap["int.mul"] =
 	formMap["Integer.max"] = formMap["int.max"] = formMap["Integer.min"] = formMap["int.min"] =
 	formMap["Integer.abs"] = formMap["int.abs"] = formMap["Integer.mod"] = formMap["int.mod"] =
+    formMap["Integer.div"] = formMap["int.div"] = 
 		[](const std::vector<Summary::Form>& src)
 		{
 			for (auto form : src)
@@ -496,7 +501,10 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 							{
 								src_z3.push_back(summaryVector[j]);
 							}
-							summaryVector[i] = createScalarSummary(callVector.size(), src_z3, opMap["select"], z3_sort, Summary::Form::ELEM);
+                            Summary::Form dst_form;
+                            if (summary1.form == summary2.form) dst_form = summary1.form;
+                            else dst_form = Summary::Form::ELEM;
+							summaryVector[i] = createScalarSummary(callVector.size(), src_z3, opMap["select"], z3_sort, dst_form);
 						}
 						return true;
 					}
@@ -522,7 +530,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 						summary.addBranch(branch);
 					}
 				}
-				// 利用section.boundValue补全新summary.branches的index信息
+				// 利用section.boundValue补全新summary.branches的index信息,同时对b_i进行skolemize
 				for (auto boundValue : loop->getBoundVector())
 				{
 					const auto& bound_summary = summaryVector[vertexId({ boundValue, callVector })];
@@ -548,15 +556,13 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 							solveAffine(branch.index[j].func, src_b, dst_0, dst_1, scale, offset, isAffine, isConstant);
 							if (isAffine && !isConstant)
 							{
-								auto skolemFunc = ((w[j] - offset) / scale).simplify();
-								branch.index[j].bound = bound;
-								branch.index[j].skolem_b = skolemFunc;
-								z3::expr_vector dst_sk(this->z3ctx);
-								dst_sk.push_back(skolemFunc);
-								branch.cond = branch.cond.substitute(src_b, dst_sk);
-								branch.elem = branch.elem.substitute(src_b, dst_sk);
-
-								//branch.index[j].func = branch.index[j].func.substitute(src_b, dst_sk);
+                                auto skolemFunc = ((w[j] - offset) / scale).simplify();
+                                branch.index[j].bound = bound;
+                                branch.index[j].skolem_b = skolemFunc;
+                                z3::expr_vector dst_sk(this->z3ctx);
+                                dst_sk.push_back(skolemFunc);
+                                branch.cond = branch.cond.substitute(src_b, dst_sk);
+                                branch.elem = branch.elem.substitute(src_b, dst_sk);
 							}
 						}
 						branch.cond = simplifyUseTactic(branch.cond);
@@ -573,8 +579,31 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
 				{
 					auto remain_cond = simplifyUseTactic(!override_cond && branch.cond, true);
 					if (!remain_cond.is_false())
-					{
-						summary.mergeBranch({ remain_cond, branch.elem, branch.layer, branch.index });
+                    {
+                        // prevent data passing branch (which is actually wrong) from merging
+                        // into newly generated one
+                        z3::expr_vector src_t(this->z3ctx);
+                        src_t.push_back(this->z3ctx.int_const("t"));
+                        z3::expr _s(this->z3ctx);
+                        z3::expr _o(this->z3ctx);
+                        z3::expr_vector dst_0(this->z3ctx);
+                        dst_0.push_back(this->z3ctx.int_val(0));
+                        z3::expr_vector dst_1(this->z3ctx);
+                        dst_1.push_back(this->z3ctx.int_val(1));
+                        bool is_tiled = false, can_merge = false, t_aff, t_cst;
+                        for (auto& ind : branch.index)
+                        {
+                            solveAffine(ind.func, src_t, dst_0, dst_1, _s, _o, t_aff, t_cst);
+                            is_tiled = is_tiled || (t_aff && !t_cst && has(branch.elem, "w_"));
+                        }
+                        for (auto& res_br : summary.branches)
+                        {
+                            can_merge = can_merge || summary.canMerge(res_br, branch);
+                        }
+                        if (!is_tiled || !can_merge)
+                        {
+                            summary.mergeBranch({ remain_cond, branch.elem, branch.layer, branch.index });
+                        }
 					}
 				}
 				for (auto& branch : summary.branches)

@@ -36,7 +36,12 @@ if __name__ == "__main__":
               """)
         exit(1)
         
-    src_dir = os.path.join(cwd, 'examples', 'benchmarks')
+    if len(sys.argv) == 2:
+        dir_name = sys.argv[1]
+        print(f"Using assigned benchmark: {dir_name}")
+    else:
+        dir_name = 'benchmarks'
+    src_dir = os.path.join(cwd, 'examples', dir_name)
     dst_dir = os.path.join(cwd, 'out', 'sdsl')
 
     if not os.path.exists(dst_dir):

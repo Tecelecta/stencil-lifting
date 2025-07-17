@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "ArrayAccessVisitor.h"
 #include "Summary.h"
@@ -7,7 +7,8 @@ struct ArrayWriteCond
 {
 	ArrayWriteCond(z3::context& z3ctx, Summary::Branch branch)
 		: index(z3ctx), writeCond(z3ctx), existCond(z3ctx), validCond(z3ctx),
-		skolemFunc(z3ctx), skolemCond(z3ctx), branch(std::move(branch)) {}
+		skolemFunc(z3ctx), skolemCond(z3ctx), branch(std::move(branch)),
+        potential_tiling(z3ctx) {}
 
 	Summary::Branch branch;
 	z3::expr_vector index;
@@ -19,6 +20,10 @@ struct ArrayWriteCond
 	bool hasAffine = false;
 	bool hasSkolem = false;
 	bool allConstant = true;
+    
+    z3::expr_vector potential_tiling;
+    
+    bool hasPotentialTiling();
 };
 
 class ArraySetSolver

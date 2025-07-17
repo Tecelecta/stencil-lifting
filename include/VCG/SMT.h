@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "z3++.h"
 
@@ -16,4 +16,4 @@ z3::expr_vector createZ3Vector(z3::context& z3ctx, const std::vector<z3::expr>& 
 z3::expr simplifyUseTactic(z3::expr src, bool elim_and = false);
 
 void solveAffine(z3::expr y, z3::expr_vector src_x, z3::expr_vector dst_0, z3::expr_vector dst_1,
-	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant);
+	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant, int step=1);
