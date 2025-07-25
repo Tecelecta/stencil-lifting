@@ -9,7 +9,7 @@ def translate_dir(src_dir, dst_dir):
     parser = ParserFactory().create()
     for root, _, files in os.walk(src_dir, topdown=False):
         for name in files:
-            if name.find('.f') < 0:
+            if name[-4:] != '.f90' and name[-2:] != '.f':
                 continue
             fortran_path = root + '/' + name
             print("Translating: ", fortran_path)
@@ -42,10 +42,14 @@ if __name__ == "__main__":
     else:
         dir_name = 'benchmarks'
     src_dir = os.path.join(cwd, 'examples', dir_name)
-    dst_dir = os.path.join(cwd, 'out', 'sdsl')
 
-    if not os.path.exists(dst_dir):
-        os.mkdir(dst_dir)
+    out_tree = ['out', 'sdsl']
+    dst_dir = cwd
+
+    for step in out_tree:
+        if not os.path.exists(os.path.join(dst_dir, step)):
+            dst_dir = os.path.join(dst_dir, step)
+            os.mkdir(dst_dir)
 
     translate_dir(src_dir, dst_dir)
 

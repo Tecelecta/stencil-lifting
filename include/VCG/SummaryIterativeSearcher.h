@@ -59,5 +59,6 @@ private:
 	std::unordered_map<Z3_ast, Summary> summaryMap;
 	LoopParallelizePass parallelizePass;
     
-    z3::expr mkInnerTileBound(z3::expr cond, const z3::expr& lb, const z3::expr& ub, const z3::expr& scale);
+    z3::expr mkInnerTileBound(z3::expr cond, const z3::expr& lb, const z3::expr& ub);
+    z3::expr condNextTimeStep(z3::expr cond);
 };

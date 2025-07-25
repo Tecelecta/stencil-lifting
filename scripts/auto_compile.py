@@ -23,10 +23,10 @@ def lift_dir(src_dir, dst_dir, sdslc):
                 print("Output:\n %s" % ret.stderr)
             else:
                 for console_out in ret.stdout.split('\n'):
-                    if len(console_out) > 0 and console_out[0] == '用':
-                        lift_time = float(console_out[2:-1])
-                    # if console_out.find("Lifting-time:") == 0:
-                    #     lift_time = float(console_out.find)
+                    # if len(console_out) > 0 and console_out[0] == '用':
+                    #     lift_time = float(console_out[2:-1])
+                    if console_out.find("Total-time:") == 0:
+                        lift_time = float(console_out.split()[1])
                         dic[kname] = lift_time
                         break
     return dic
@@ -56,8 +56,9 @@ if __name__ == "__main__":
         os.mkdir(stat_dir)
 
     dic1 = lift_dir(src_dir, dst_dir, sdslc)
-    dic2 = lift_dir(src_a_dir, dst_dir, sdslc)
+    # dic2 = lift_dir(src_a_dir, dst_dir, sdslc)
 
     out_log = os.path.join(cwd, 'out', 'stat', 'sl-lift.json')
     with open(out_log, 'w') as f:
         json.dump(dic1, f, indent=2)
+        # json.dump(dic2, f, indent=2)

@@ -19,16 +19,14 @@ RETURN_TYPE: {
 		nextToken();
 		goto RETURN_ID;
 	}
-	// ERROR("在分析函数定义时，未识别到返回值")
-	ERROR("Return value not found when parsing function")
+	ERROR("In function defination: return value not found")
 }
 
 RETURN_ID: {
 	switch (readToken().category)
 	{
 	case Token::Category::LBRACKET:
-		// "在数组表达式中发现语法错误"
-		RECURSE(ArraySubscriptExpressionParser, "Syntax error when parsing Array Expr");
+		RECURSE(ArraySubscriptExpressionParser, "Syntax error in array expression");
 		astNodeReduce(AST::Category::ARRAY_ELEMENT, 2);
 		goto RETURN_ID;
 	case Token::Category::IDENTIFIER:
@@ -49,12 +47,11 @@ RETURN_ID: {
 			nextToken();
 			goto FUNC_NAME;
 		}
-		// ERROR("在分析函数定义时，未识别到赋值号'='")
-		ERROR("Assgining operator '=' not found when parsing function defs")
+		ERROR("In function defination: assgin operator '=' not found")
 	default: {
 		auto message = readToken().isKeyword() ? 
-			"Keywords as return variable name when parsing function defs" : //"在分析函数定义时，使用关键字作为返回值名" 
-			"Return variable name not found when parsing function defs"; //"在分析函数定义时，未识别到返回值名"
+			"Keywords as return variable name when parsing function defs" : //"In function defination: using keywords as return value name" 
+			"Return variable name not found when parsing function defs"; //"In function defination: return value not found名"
 		ERROR(message);
 	}
 	}
@@ -73,10 +70,9 @@ FUNC_NAME: {
 			nextToken();
 			goto PARA_TYPE;
 		}
-		// ERROR("在分析函数定义时，未识别到函数参数")
-		ERROR("Parameter not found when parsing function defs")
+		ERROR("In function defination: parameter not found")
 	}
-	auto message = readToken().isKeyword() ? "在分析函数定义时，使用关键字作为函数名" : "在分析函数定义时，未识别到函数名";
+	auto message = readToken().isKeyword() ? "In function defination: using keywords as function name" : "In function defination: function name not found";
 	ERROR(message);
 }
 
@@ -95,7 +91,7 @@ PARA_TYPE: {
 		nextToken();
 		goto PARA_ID;
 	default:
-		ERROR("在分析函数定义时，识别到未定义类型")
+		ERROR("In function defination: undefined type")
 	}
 }
 
@@ -103,7 +99,7 @@ PARA_ID: {
 	switch (readToken().category)
 	{
 	case Token::Category::LBRACKET:
-		RECURSE(ArraySubscriptExpressionParser, "在数组表达式中发现语法错误");
+		RECURSE(ArraySubscriptExpressionParser, "Syntax error in array expression");
 		astNodeReduce(AST::Category::ARRAY_ELEMENT, 2);
 		goto PARA_ID;
 	case Token::Category::IDENTIFIER:
@@ -125,9 +121,9 @@ PARA_ID: {
 			astNodeReduce(AST::Category::FUNCTION_PARAMETER, ptCnt);
 			goto FUNC_BODY;
 		}
-		ERROR("在分析函数定义时，参数名后应为逗号或右括号")
+		ERROR("In function defination: the following token after parameter name should be ',' or ')'")
 	default: {
-		auto message = readToken().isKeyword() ? "在分析函数定义时，使用关键字作为参数名" : "在分析函数定义时，未识别到参数名";
+		auto message = readToken().isKeyword() ? "In function defination: keywords as parameter name" : "In function defination: parameter name not found";
 		ERROR(message);
 	}
 	}
@@ -149,14 +145,14 @@ FUNC_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析函数定义时，未正确结束函数体")
+		ERROR("In function defination: incorrect ending of function body")
 	case Token::Category::FUNC:
 		stmtCnt++;
-		RECURSE(FunctionDefinitionParser, "在分析嵌套函数定义时,发现语法错误");
+		RECURSE(FunctionDefinitionParser, "In nested function defination: syntax error");
 		goto FUNC_BODY;
 	default:
 		stmtCnt++;
-		RECURSE(StatementParser, "在分析函数定义时，发现函数体语法错误");
+		RECURSE(StatementParser, "In function defination: synatx error in function body");
 		goto FUNC_BODY;
 	}
 }
@@ -182,7 +178,7 @@ VAR_NAME: {
 		nextToken();
 		goto ASG;
 	}
-	ERROR("在分析变量定义时，变量名语法错误")
+	ERROR("In function defination: synatx error in variable name")
 }
 
 ASG: {
@@ -190,7 +186,7 @@ ASG: {
 	{
 		astLeafCreate();
 		nextToken();
-		RECURSE(RightValueExpressionParser, "在分析变量初始化时，发现语法错误");
+		RECURSE(RightValueExpressionParser, "In variable defination: syntax error");
 		goto SUCCESS;
 	}
 	else if (readToken().category == Token::Category::COMMA)
@@ -199,7 +195,7 @@ ASG: {
 		nextToken();
 		goto VAR_NAME;
 	}
-	ERROR("在分析变量定义时，未发现赋值符号'='")
+	ERROR("In variable defination: assign operator '=' not found")
 }
 
 SUCCESS:
@@ -222,7 +218,7 @@ STRUCT_NAME: {
 		nextToken();
 		goto SELECT;
 	}
-	auto message = readToken().isKeyword() ? "在分析结构体定义时，使用关键字作为结构体名" : "在分析结构体定义时，未识别到结构体名";
+	auto message = readToken().isKeyword() ? "In structure defination: using keywords as structure name" : "In structure defination: structure name not found";
 	ERROR(message);
 }
 
@@ -238,9 +234,9 @@ SELECT: {
 	case Token::Category::IDENTIFIER:
 		goto CSTYLE_TYPE;
 	case Token::Category::END:
-		ERROR("在分析结构体定义时，结构体没有成员")
+		ERROR("In structure defination: member declaration not found")
 	default:
-		ERROR("在分析结构体定义时，识别到未定义的成员类型")
+		ERROR("In structure defination: member type undefined")
 	}
 }
 STRUCT_BODY: {
@@ -259,14 +255,14 @@ STRUCT_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析结构体定义时，未正确结束结构体定义")
+		ERROR("In structure defination: incorrect structure ending")
 	case Token::Category::VAR:
 	case Token::Category::CONST:
 		stmtCnt++;
-		RECURSE(VariableDefinitionParser, "在分析结构体成员定义时发现语法错误");
+		RECURSE(VariableDefinitionParser, "In structure defination: syntax error in member defination");
 		goto STRUCT_BODY;
 	default:
-		ERROR("在分析结构体定义时，识别到未定义的成员类型")
+		ERROR("In structure defination: member type undefined")
 	}
 }
 
@@ -277,7 +273,7 @@ CSTYLE_TYPE: {
 		nextToken();
 		goto CSTYLE_TYPE;
 	case Token::Category::ASG:
-		ERROR("TODO：在结构体内对成员赋初值")
+		ERROR("TODO: initialize member value in structure defination")
 	case Token::Category::END:
 		astNodeReduce(AST::Category::STRUCT_BODY, stmtCnt);
 		astLeafCreate();
@@ -289,14 +285,14 @@ CSTYLE_TYPE: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析结构体定义时，未正确结束结构体定义")
+		ERROR("In structure defination: incorrect structure ending")
 	case Token::Category::IDENTIFIER:
 		stmtCnt++;
 		astLeafCreate();
 		nextToken();
 		goto CSTYLE_NAME;
 	default:
-		ERROR("在分析结构体定义时，识别到未定义的成员类型")
+		ERROR("In structure defination: member type undefined")
 	}
 }
 
@@ -311,7 +307,7 @@ CSTYLE_NAME: {
 		nextToken();
 		goto CSTYLE_TYPE;
 	default:
-		ERROR("在分析结构体定义时，识别到未定义的成员类型")
+		ERROR("In structure defination: member type undefined")
 	}
 }
 

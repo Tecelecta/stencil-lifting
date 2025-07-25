@@ -61,7 +61,7 @@ public:
 
 	void addBranch(Branch src_branch);
 
-	bool canMerge(const Summary::Branch& a, const Summary::Branch& b);
+	bool canMerge(const Summary::Branch& a, const Summary::Branch& b) const;
 
 	bool mergeBranch(Branch src_branch);
 
@@ -115,6 +115,23 @@ static inline z3::expr find_const_subexpr(const z3::expr& expr, const std::strin
                 return ret;
             }
             ret = find_const_subexpr(expr.arg(i), key);
+        }
+        return ret;
+    }
+}
+
+static inline bool lookup_const_subexpr(const z3::expr& expr, const std::string& key)
+{
+    if (expr.is_const())
+    {
+        return expr.to_string() == key;
+    }
+    else
+    {
+        auto ret = false;
+        for (int i=0; i<expr.num_args(); i++)
+        {
+            ret = ret || lookup_const_subexpr(expr.arg(i), key);
         }
         return ret;
     }

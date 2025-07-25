@@ -369,12 +369,18 @@ void ArraySetSolver::solveAffineAndSkolem(ArrayWriteCond& write)
                     auto bound_i = find_const_subexpr(wi, "b_");
                     v_b.push_back(bound_i);
                     solveAffine(wi, v_b, dst_0, dst_1, scale, offset, isAffine, isConstant);
-//                    assert(isAffine && !isConstant);
+                    if(!isAffine && !isConstant)
+                    {
+                        int step = searchNonUnitStep(wi);
+                        if (step > 1)
+                            sovleNonUnitAffine(wi, v_b, scale, offset, isAffine, isConstant, step);
+                    }
+                    assert(isAffine && !isConstant);
                     find_param(offset, params);
                     if (params.size()>0)
                     {
                         for ( auto p: params ) z_dst.push_back(z3ctx.int_val(0));
-                        auto no_param = (wi.substitute(params, z_dst) - bound_i).simplify();
+                        auto no_param = offset.substitute(params, z_dst).simplify();
                         write.potential_tiling.push_back((w[i] + offset - no_param).simplify());
                         restore_w_filled = true;
                     }

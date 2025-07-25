@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	auto t_start = clock();
 	// IR生成
 	auto context = std::make_unique<Context>();
 	SectionConstructor sectionConstructor(errorHandler, context.get());
@@ -170,6 +171,8 @@ int main(int argc, char* argv[])
 	{
 		PrintSdslModulePass(out).run(graph, returnValues);
 	}
+
+	std::cout << "Total-time: " << double(clock() - t_start) / CLOCKS_PER_SEC << " sec" << std::endl;
 	std::cout << "\n ---------- END ---------- \n\n";
 	return 0;
 }

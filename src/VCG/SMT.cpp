@@ -86,20 +86,20 @@ z3::expr simplifyUseTactic(z3::expr src, bool elim_and)
 }
 
 void solveAffine(z3::expr y, z3::expr_vector src_x, z3::expr_vector dst_0, z3::expr_vector dst_1,
-	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant, int step)
+	z3::expr& scale, z3::expr& offset, bool& isAffine, bool& isConstant)
 {
 	assert(src_x.size() == 1 && dst_0.size() == 1 && dst_1.size() == 1);
-    dst_1[0] = dst_1[0];
     auto x = src_x[0];
 	if (isFunctionOf(y, x))
 	{
 		auto y0 = y.substitute(src_x, dst_0);
-		auto y1 = y.substitute(src_x, dst_1);
+        auto y1 = y.substitute(src_x, dst_1);
 		scale = (y1 - y0).simplify();
 		offset = y0.simplify();
-		auto f = (scale * x + offset).simplify();
-		isAffine = scale.is_numeral() && proveEquals(f, y); // TODO: 变长缩放因子
-		isConstant = false;
+
+        auto f = (x * scale + offset).simplify();
+        isAffine = scale.is_numeral() && proveEquals(f, y);
+        isConstant = false;
 	}
 	else
 	{
@@ -110,22 +110,152 @@ void solveAffine(z3::expr y, z3::expr_vector src_x, z3::expr_vector dst_0, z3::e
 	}
 }
 
-static void _find_nonunit_step(z3::expr expr, z3::expr& outer, z3::expr& inner, z3::expr& scale)
+void sovleNonUnitAffine(z3::expr y, z3::expr_vector src_x, z3::expr& scale,
+                        z3::expr& offset, bool& isAffine, bool& isConstant, int step)
 {
-    if (expr.is_const())
+    assert(src_x.size() == 1);
+    auto& z3ctx = y.ctx();
+    auto x = src_x[0];
+    assert(isFunctionOf(y, x));
+    for (int extra=0; extra<8; ++extra)
     {
-        return;
+        z3::expr_vector dst_0(z3ctx);
+        z3::expr_vector dst_1(z3ctx);
+        dst_0.push_back(z3ctx.int_val(extra));
+        dst_1.push_back(z3ctx.int_val(extra+step));
+        
+        auto y0 = y.substitute(src_x, dst_0);
+        auto y1 = y.substitute(src_x, dst_1);
+        scale = ((y1 - y0)/step).simplify();
+        offset = (y0 - extra*scale).simplify();
+        // handling non-unit step affine function
+        auto f = ((step+extra+(x-step-extra)/step*step) * scale + offset).simplify();
+        isAffine = scale.is_numeral() && proveEquals(f, y);
+        if (isAffine) break;
     }
-    else
-    {
-        auto kind = expr.decl().decl_kind();
-        if (kind == Z3_OP_IDIV)
-        {
-        }
-    }
+    isConstant = false;
 }
 
-z3::expr looseNonUnitStep(const z3::expr& expr)
+bool match(const z3::expr& expr, Pattern p, z3::expr_vector& res)
 {
+    // match root node
+    if (expr.decl().decl_kind() == p.kind)
+    {
+        res.push_back(expr);
+        // match children nodes
+        if (p.child.has_value())
+        {
+            bool found = false;
+            for(auto& child : p.child.value())
+            {
+                found = false;
+                for (const auto& arg : expr.args())
+                {
+                    if ( (found = match(arg, child, res)) )
+                    {
+                        break;
+                    }
+                }
+                if (!found) break;
+            }
+            return found;
+        }
+        return true;
+    }
+    return false;
+}
+
+z3::expr_vector search(const z3::expr& expr, Pattern p)
+{
+    z3::expr_vector res(expr.ctx());
+    if (match(expr, p, res))
+    {
+        return res;
+    }
+
+    for (const auto& arg : expr.args())
+    {
+        auto ret = search(arg, p);
+        if (!ret.empty()) return ret;
+    }
+    return z3::expr_vector(expr.ctx());
+}
+
+z3::expr_vector searchAll(const z3::expr& expr, Pattern p)
+{
+    z3::expr_vector match_res(expr.ctx());
+    if (match(expr, p, match_res))
+    {
+        return match_res;
+    }
     
+    z3::expr_vector search_res(expr.ctx());
+    for (const auto& arg : expr.args())
+    {
+        auto child = searchAll(arg, p);
+        if (!child.empty())
+        {
+            for (auto m: child)
+                search_res.push_back(m);
+        }
+    }
+    return search_res;
+}
+
+int searchNonUnitStep(const z3::expr& expr)
+{
+    Pattern mul_div_val{
+        Z3_OP_MUL, {
+            {Z3_OP_IDIV, {
+                {Z3_OP_ANUM}
+            }},
+            {Z3_OP_ANUM}
+        }
+    };
+    
+    auto res = search(expr, mul_div_val);
+    if (!res.empty())
+    {
+        if (res[2].is_int() && res[3].is_int() && proveTrue(res[2] == res[3]))
+        {
+            return res[2].get_numeral_int();
+        }
+    }
+    assert(false);
+    return -1;
+}
+
+void pealMulDivConst(const z3::expr& expr, z3::expr_vector& src, z3::expr_vector& dst)
+{
+    Pattern mul_div_val{
+        Z3_OP_MUL, {
+            {Z3_OP_IDIV, {
+                {Z3_OP_ANUM}
+            }},
+            {Z3_OP_ANUM}
+        }
+    };
+    
+    auto res = searchAll(expr, mul_div_val);
+    if (!res.empty())
+    {
+        int cursor = 0;
+        while (cursor < res.size())
+        {
+            if (res[cursor+2].is_int() && res[cursor+3].is_int()
+                && proveTrue(abs(res[cursor+2]) == abs(res[cursor+3])))
+            {
+                src.push_back(res[cursor]);
+                for (const auto& arg : res[cursor+1].args())
+                {
+                    if ( (Z3_ast)res[cursor+2] != (Z3_ast)arg )
+                    {
+                        dst.push_back(arg);
+                    }
+                }
+            }
+            cursor += 4;
+        }
+    }
+    else assert(false);
 }

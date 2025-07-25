@@ -8,9 +8,10 @@ def exec_dir(path):
     for root, dirs, files in os.walk(path, topdown=False):  
         for fname in files:
             kname = fname[:-7] 
+
+            print(f"Profiling \033[32m{fname}\033[0m ...")
             ret = sp.run([os.path.join(root, fname)], capture_output=True, text=True)
             
-            print(f"Running {kname} ...")
             print("Process return value: %d" % ret.returncode)
             if ret.returncode != 0:
                 print("Output:\n %s" % ret.stderr)

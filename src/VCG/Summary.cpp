@@ -173,7 +173,7 @@ static bool identical(z3::expr a, z3::expr b)
     }
 }
 
-bool Summary::canMerge(const Summary::Branch& a, const Summary::Branch& b)
+bool Summary::canMerge(const Summary::Branch& a, const Summary::Branch& b) const
 {
 	switch (form)
 	{
@@ -194,7 +194,7 @@ bool Summary::canMerge(const Summary::Branch& a, const Summary::Branch& b)
 				return false;
 			}
 		}
-		return (Z3_ast)a.elem == (Z3_ast)b.elem;
+        return (Z3_ast)a.elem == (Z3_ast)b.elem;
 	}
 	default:
 		return false;
@@ -237,8 +237,16 @@ bool Summary::checkDistinct() const
 			{
 				if (i != j && !proveFalse(branches[i].cond && branches[j].cond))
 				{
+#ifdef _DEBUG
+                    std::cerr << "conflict branches: " << i << ", " << j << std::endl;
+                    std::cerr << "branch cond " << i << ":\n";
+                    std::cerr << simplifyUseTactic(branches[i].cond).to_string() << std::endl;
+                    std::cerr << "branch cond " << j << ":\n";
+                    std::cerr << simplifyUseTactic(branches[j].cond).to_string() << std::endl;
+#else
 					std::cerr << str() << std::endl;
-					return false;
+#endif
+                    return false;
 				}
 			}
 		}
