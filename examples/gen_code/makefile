@@ -17,12 +17,15 @@ else
 CFLAGS = 
 endif
 
-.SECONDARY: $(addprefix $(OBJ)/, $(TARGET:.halide=.drv.o)) \
-		    $(addprefix $(OBJ)/, $(TARGET:.halide=.fort.o))
+.SECONDARY: $(addprefix $(OBJ)/, $(OBJS))
 
 build: $(addprefix $(BIN)/, $(TARGET))
 
 $(OBJ)/%.fort.o: $(FORT_DIR)/%.f90
+	@mkdir -p $(@D)
+	$(FORT) $(CFLAGS) $< -c -o $@ 
+
+$(OBJ)/%.fort.o: $(FORT_DIR)/%.f
 	@mkdir -p $(@D)
 	$(FORT) $(CFLAGS) $< -c -o $@ 
 
@@ -32,8 +35,8 @@ $(OBJ)/%.drv.o: %_halide.cpp
 $(BIN)/%.halide: $(OBJ)/%.fort.o $(OBJ)/%.drv.o
 	@mkdir -p $(@D)
 	$(CXX) $^ -o $@ -ldl -lpthread -L $(HALIDE_DISTRIB_PATH)/lib -lHalide \
-	-L /opt/homebrew/Cellar/gcc/15.1.0/lib/gcc/current/ -lgfortran
-
+	-L /opt/homebrew/Cellar/gcc/15.1.0/lib/gcc/current/ \
+	-lgfortran
 
 clean:
 	rm -rf $(BIN) $(OBJ)

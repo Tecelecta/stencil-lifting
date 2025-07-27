@@ -4,16 +4,15 @@ SUBROUTINE horizontal_diffusion_u_2( &
     jts, jte, kts, kte, its, ite        )
 
     INTEGER :: jts, jte, kts, kte, its, ite 
-    REAL(kind=8), DIMENSION( kts:kte ) ::    fnm
-    REAL(kind=8), DIMENSION( kts:kte ) ::    fnp
-    REAL(kind=8), DIMENSION( its:ite, kts:kte+1, jts:jte) :: zx
-    REAL(kind=8), DIMENSION( its-1:ite, kts:kte+1, jts:jte+1) :: zy
-    REAL(kind=8), DIMENSION( its-1:ite+1, kts:kte, jts-1:jte+1) :: titau1, &
-                                                                   titau2
+    REAL(kind=8), DIMENSION( kts:kte ) ::    fnm, fnp !1p*2
+    REAL(kind=8), DIMENSION( its:ite, kts:kte+1, jts:jte) :: zx !2p
+    REAL(kind=8), DIMENSION( its-1:ite, kts:kte+1, jts:jte+1) :: zy !8p
+    REAL(kind=8), DIMENSION( its-1:ite+1, kts:kte, jts-1:jte+1) :: titau1, & !4p
+                                                                   titau2 !4p
     REAL(kind=8), DIMENSION( its:ite, kts:kte, jts:jte) :: zx_at_u,&
                                                            zy_at_u,&
                                                            titau1avg, &
-                                                           titau2avg
+                                                           titau2avg !4o
 
 DO j = jts, jte
     DO k = kts+1, kte

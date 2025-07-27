@@ -4,9 +4,9 @@ SUBROUTINE cal_helicity ( hatavg, hat, fnm, fnp, cf1, cf2, cf3, &
 
 INTEGER :: jts, jte, kts, kte, its, ite
 REAL(kind=8) :: cf1, cf2, cf3, cft1, cft2
-REAL(kind=8), DIMENSION( kts:kte ):: fnm, fnp
-REAL(kind=8), DIMENSION( its-3:ite+2, kts:kte, jts-3:jte+2 ) :: hat                                
-REAL(kind=8), DIMENSION( its:ite, kts:kte, jts:jte ) :: hatavg                                
+REAL(kind=8), DIMENSION( kts:kte ):: fnm, fnp !1p*2
+REAL(kind=8), DIMENSION( its-3:ite+2, kts:kte, jts-3:jte+2 ) :: hat !4p
+REAL(kind=8), DIMENSION( its:ite, kts:kte, jts:jte ) :: hatavg !out
 
 DO j = jts, jte
     DO k = kts, kte

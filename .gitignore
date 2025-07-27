@@ -5,3 +5,5 @@ sdsl_out/
 .vscode/
 examples/tmp/
 .DS_Store
+*.mod
+*.bak

@@ -52,7 +52,7 @@ inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func nz(funcName);
     nz(d) = (((d ) + Expr(1e-5)) / Expr(100.0)) * cast<double>(10);
-    if (vectorize) nz.vectorize(d, 8);
+   
     return nz;
 }
 
@@ -62,8 +62,7 @@ inline Func init_nonzero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func nz(funcName);
     nz(d1, d2) = ((((d1 + d2*10)) + Expr(1e-5)) / Expr(100.0)) * cast<double>(10);
-    nz.parallel(d2);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -73,9 +72,7 @@ inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func nz(funcName);
     nz(d1, d2, d3) = ((((d1 + d2*10 + d3*100)) + Expr(1e-5)) / Expr(100.0)) * cast<double>(10);
-    nz.parallel(d2);
-    nz.parallel(d3);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -85,8 +82,7 @@ inline Func set_zero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func set_zero(funcName);
     set_zero(d) = Expr(0.0);
-    set_zero.parallel(d);
-    if (vectorize) set_zero.vectorize(d, 8);
+
     return set_zero;
 }
 
@@ -96,9 +92,7 @@ inline Func set_zero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func set_zero(funcName);
     set_zero(d1, d2) = Expr(0.0);
-    set_zero.parallel(d1);
-    set_zero.parallel(d2);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -108,10 +102,7 @@ inline Func set_zero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func set_zero(funcName);
     set_zero(d1, d2, d3) = Expr(0.0);
-    set_zero.parallel(d1);
-    set_zero.parallel(d2);
-    set_zero.parallel(d3);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 

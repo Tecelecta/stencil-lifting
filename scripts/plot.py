@@ -2,6 +2,7 @@
 import os
 import os.path as osp
 import json
+import nameset
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -676,15 +677,73 @@ def convert_tex():
         json.dump(dat, of, indent=2, ensure_ascii=True)
 
 
+def plot_ablation(input_prefix, output_prefix):
+    fig = plt.figure(figsize=[6,3], layout='constrained')
+    axes = flattern(fig.subplots(2, 2))
+
+    knames = nameset.ablation()
+    with open(osp.join(input_prefix, 'sl-lift.json')) as f:
+        lift_time_obj = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
+    
+    prefix = ["jacobi", "conv", "heat", "heat27"]
+    prefix_full = ["2d-5p", "2d-9p", "3d-7p", "3d-27p"]
+    suffix = ["b", "p", "i", "u", "uo", "t", "to"]
+    suffix_full = ["LF", "PD", "IB", "LU", "LU*", "LT", "LT*"]
+    dats = [[None]*7, [None]*7, [None]*7, [None]*7]
+    raws = [None]*4
+    for k,v in lift_time_obj.items():
+        v *= 50
+        if k in knames:
+            pre_suf = k.split("_")
+            for i, kn in enumerate(prefix):
+                if kn == pre_suf[0]:
+                    if len(pre_suf) == 1:
+                        raws[i] = v
+                        break
+                    for j, on in enumerate(suffix):
+                        if pre_suf[1] == on:
+                            dats[i][j] = v
+                            break
+    for i in range(4):
+        if raws[i] > dats[i][1]:
+            tmp = raws[i]
+            raws[i] = dats[i][1]
+            dats[i][1] = tmp
+
+    ytks = [
+        np.arange(0,21,5),
+        np.arange(0,31,10),
+        np.arange(0,76,25),
+        np.arange(0,81,20),
+    ]
+    for idx, ax in enumerate(axes):
+        plot_one(ax, [np.array(dats[idx])], [COLOR[idx//2]], bar_config=[.8,.8])
+        ax.plot(np.arange(-1,8), [raws[idx]]*9, '--', c='r', zorder=10)
+        axestyle(ax, np.arange(7), ytks[idx],
+                 ytick_label=lambda x: f'{x:.0f}',
+                 xtick_label=suffix_full,
+                 xlim=(-0.1,1.1))
+    
+    figstyle(fig, "y", axes, "Lifting Time (s)", ylabel_style, is_plot_grid=True)
+    figstyle(fig, "x", axes, [None]*2 + ["Optimization Techniques"]*2, xlabel_style, is_plot_grid=False)
+    figstyle(fig, 'title', axes, prefix_full, title_style)
+    # plt.show()
+    fig.savefig(osp.join(output_prefix, "ablation.pdf"))
+
+
 def plot_violin(input_prefix, output_prefix):
-    fig = plt.figure(figsize=[11,2],layout='tight')
+    fig = plt.figure(figsize=[11,2],layout='constrained')
     axes = flattern(fig.subplots(1, 4, squeeze=False))
+
+    knames = nameset.stng()
     
     with open(osp.join('scripts','stng-perf.json'), 'r') as f:
         stng_obj = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
-    item = stng_obj.pop("akl82")
+    
+    item = stng_obj.pop("akl81") # purging abnormal result
+
     stng_stat = statistic_lifting_time(stng_obj)
-    stng_obj["akl82"] = item
+    stng_obj["akl81"] = item
 
     for ax, dim in zip(axes[:2], range(2,4)):
         xlab, dat = extract_label_and_array(stng_stat[dim], sort_with=lambda x: int(x[0]))
@@ -696,9 +755,14 @@ def plot_violin(input_prefix, output_prefix):
         new_xlab = [str(round(x)) for x in new_x_tick]
         axestyle(ax, new_x_tick, parts[1], ylim = (0,1.), xtick_label=new_xlab, ytick_label=lambda x: f"{round(x)}")
 
-    with open(osp.join(input_prefix, 'sl-perf.json'), 'r') as f:
+    with open(osp.join(input_prefix, 'sl-lift.json'), 'r') as f:
         sl_obj = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
         for k in sl_obj.keys():
+            if k not in knames:
+                continue
+            time = sl_obj[k]
+            sl_obj[k] = {}
+            sl_obj[k]['time'] = time
             sl_obj[k]['pt'] = stng_obj[k]['pt']
             sl_obj[k]['nout'] = stng_obj[k]['nout']
         sl_stat = statistic_lifting_time(sl_obj)
@@ -719,10 +783,11 @@ def plot_violin(input_prefix, output_prefix):
     figstyle(fig, "y", axes, "Lifting Time (s)", ylabel_style, is_plot_grid=True)
     figstyle(fig, "x", axes, ['Complexity']*4, xlabel_style)
     figstyle(fig, 'title', axes, ["2D Stencil", "3D Stencil", "2D Stencil", "3D Stencil"], title_style)
-    fig.savefig(osp.join(output_prefix, "stat.pdf"))
+    plt.show()
+    # fig.savefig(osp.join(output_prefix, "scale.pdf"))
 
 
-def plot_t2(input_prefix, output_prefix):
+def plot_stng_tab(input_prefix, output_prefix):
     header = [
         "Kernel", 
         "Fortran Time (ms)", 
@@ -734,10 +799,7 @@ def plot_t2(input_prefix, output_prefix):
         "Lifting Time of Stencil-Lifting (s)", 
         "Speedup over STNG"]
 
-    index_file = osp.join('scripts', 'nameset.json')
-    with open(index_file, 'r') as f:
-        nameset = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
-    knames = nameset['table2']
+    knames = nameset.stng()
     
     base_file = osp.join('scripts', 'stng-perf.json')
     with open(base_file, 'r') as f:
@@ -784,7 +846,6 @@ if __name__ == "__main__":
     if not osp.exists(out_dir):
         os.mkdir(out_dir)
     
-    plot_t2(in_dir, out_dir)
+    # plot_stng_tab(in_dir, out_dir)
+    plot_ablation(in_dir, out_dir)
     # plot_violin(in_dir, out_dir)
-    # plot_perf('wrf', 0, in_dir, out_dir)
-    # plot_perf('mg', 1, in_dir, out_dir)

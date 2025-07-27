@@ -37,14 +37,11 @@ if __name__ == "__main__":
     cwd = os.path.abspath(os.path.curdir)
     pdir = cwd.split(os.path.sep)[-1]
     if pdir != "stencil-lifting":
-        print("""
-              please execute this script from the root dir of `stencil-lifting`
-              i.e. cd <path/to/stencil-lifting> and execute `python scripts/auto_compile.py`
-              """)
+        print("Please execute this script from the root dir of `stencil-lifting`\n"
+              "i.e. cd <path/to/stencil-lifting> and execute `python scripts/auto_compile.py`")
         exit(1)
 
     src_dir = os.path.join(cwd, 'out', 'sdsl')
-    src_a_dir = os.path.join(cwd, 'examples', 'supplement')
     dst_dir = os.path.join(cwd, 'out', 'lift')
     stat_dir = os.path.join(cwd, 'out', 'stat')
     sdslc = os.path.join(cwd, 'build', 'release', 'sdslc')
@@ -56,6 +53,7 @@ if __name__ == "__main__":
         os.mkdir(stat_dir)
 
     dic1 = lift_dir(src_dir, dst_dir, sdslc)
+    # src_a_dir = os.path.join(cwd, 'examples', 'supplement')
     # dic2 = lift_dir(src_a_dir, dst_dir, sdslc)
 
     out_log = os.path.join(cwd, 'out', 'stat', 'sl-lift.json')

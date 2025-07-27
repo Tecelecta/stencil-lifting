@@ -52,7 +52,7 @@ inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func nz(funcName);
     nz(d) = (((d % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    if (vectorize) nz.vectorize(d, 8);
+   
     return nz;
 }
 
@@ -62,8 +62,7 @@ inline Func init_nonzero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func nz(funcName);
     nz(d1, d2) = ((((d1 + d2) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -73,9 +72,7 @@ inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func nz(funcName);
     nz(d1, d2, d3) = ((((d1 + d2 + d3) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    nz.parallel(d3);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -85,9 +82,7 @@ inline Func init_nonzero<4>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3, d4;
     Func nz(funcName);
     nz(d1, d2, d3, d4) = ((((d1 + d2 + d3 + d4) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    nz.parallel(d3);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -97,8 +92,7 @@ inline Func set_zero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func set_zero(funcName);
     set_zero(d) = Expr(0.0);
-    set_zero.parallel(d);
-    if (vectorize) set_zero.vectorize(d, 8);
+
     return set_zero;
 }
 
@@ -108,9 +102,7 @@ inline Func set_zero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func set_zero(funcName);
     set_zero(d1, d2) = Expr(0.0);
-    set_zero.parallel(d1);
-    set_zero.parallel(d2);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -120,10 +112,7 @@ inline Func set_zero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func set_zero(funcName);
     set_zero(d1, d2, d3) = Expr(0.0);
-    set_zero.parallel(d1);
-    set_zero.parallel(d2);
-    set_zero.parallel(d3);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -234,7 +223,7 @@ int main(int argc, char** argv)
         zero4_gpu.compile_jit(gpu_target);
     }
 
-    Buffer<double,1> dx({3}, "dx"), dx_g(dx);
+    Buffer<double,1> dx(3, "dx"), dx_g(dx);
     Buffer<double,4> flux0({flux0_ic0_range, flux0_ic1_range, flux0_ic2_range, 5}, "flux0"), flux0_g(flux0);
     Buffer<double,4> flux1({flux1_ic1_range, flux1_ic2_range, flux1_ic0_range, 5}, "flux1"), flux1_g(flux1);
     Buffer<double,4> flux2({flux2_ic2_range, flux2_ic0_range, flux2_ic1_range, 5}, "flux2"), flux2_g(flux2);

@@ -30,27 +30,31 @@ if __name__ == "__main__":
     cwd = os.path.abspath(os.path.curdir)
     pdir = cwd.split(os.path.sep)[-1]
     if pdir != "stencil-lifting":
-        print("""
-              please execute this script from the root dir of `stencil-lifting`
-              i.e. cd <path/to/stencil-lifting> and execute `python scripts/auto_translate.py`
-              """)
+        print("please execute this script from the root dir of `stencil-lifting`\n"
+              "i.e. cd <path/to/stencil-lifting> and execute `python scripts/auto_translate.py`")
         exit(1)
         
+    dir_names = []
     if len(sys.argv) == 2:
-        dir_name = sys.argv[1]
-        print(f"Using assigned benchmark: {dir_name}")
+        args = sys.argv[1].split(",")
+        for d in args:
+            dir_names.append(d)
+        print(f"Using assigned benchmark: {','.join(dir_names)}")
     else:
-        dir_name = 'benchmarks'
-    src_dir = os.path.join(cwd, 'examples', dir_name)
+        dir_names = ["benchmarks", "ablation", os.path.join("stng-bench", "fort")]
 
     out_tree = ['out', 'sdsl']
     dst_dir = cwd
 
     for step in out_tree:
         if not os.path.exists(os.path.join(dst_dir, step)):
-            dst_dir = os.path.join(dst_dir, step)
             os.mkdir(dst_dir)
+        dst_dir = os.path.join(dst_dir, step)
 
-    translate_dir(src_dir, dst_dir)
+    for dir_name in dir_names:
+        print(f"Translating Fortran source code in \033[32m{dir_name}\033[0m ...")
+        src_dir = os.path.join(cwd, 'examples', dir_name)
+
+        translate_dir(src_dir, dst_dir)
 
 
