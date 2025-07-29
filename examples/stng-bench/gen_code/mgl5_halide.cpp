@@ -151,12 +151,18 @@ extern "C" {
     );
 }
 
+#ifndef _3D_1
+#define _3D_1 512
+#define _3D_2 512
+#define _3D_3 512
+#endif
+
 int main(int argc, char** argv)
 {
     // Check for memory constraints and adjust size if needed
-    const int n1 = 512;
-    const int n2 = 512;
-    const int n3 = 512;
+    const int n1 = _3D_1;
+    const int n2 = _3D_2;
+    const int n3 = _3D_3;
 
     // const int n1 = 5;
     // const int n2 = 5;
@@ -244,7 +250,11 @@ int main(int argc, char** argv)
     // CPU optimizations
     if(d1_range >= 8) res_cpu.vectorize(d1, 8);
     try {
-    res_cpu.parallel(d3).parallel(d2).compile_jit(cpu_target);
+        Var fo;
+        res_cpu
+            // .fuse(d3, d2, fo)
+            // .parallel(fo)
+            .compile_jit(cpu_target);
     } catch (CompileError &e) {
         std::cerr << e.what();
     }

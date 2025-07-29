@@ -12,7 +12,9 @@ REAL(kind=8), DIMENSION((x_min - 2):(x_max + 3),(y_min - 2):(y_max + 3)) :: xvel
 REAL(kind=8), DIMENSION((x_min - 2):(x_max + 3),(y_min - 2):(y_max + 3)) :: xvel1
 DO k = y_min, y_max + 1
 DO j = x_min, x_max + 1
-xvel1(j,k) = xvel0(j,k) - stepbymass(j,k) * (xarea(j,k) * (pressure(j,k) - pressure(j - 1,k)) + xarea(j,k - 1) * (pressure(j,k - 1) - pressure(j - 1,k - 1)))
+xvel1(j,k) = xvel0(j,k) - stepbymass(j,k) * &
+            (xarea(j,k) * (pressure(j,k) - pressure(j - 1,k)) + &
+             xarea(j,k - 1) * (pressure(j,k - 1) - pressure(j - 1,k - 1)))
 END DO
 END DO
 END SUBROUTINE 

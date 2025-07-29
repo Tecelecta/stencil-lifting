@@ -1,0 +1,13 @@
+name: stencil-env
+
+channels:
+  - nvidia
+  - defaults
+
+dependencies:
+  - python=3.9
+  - cudatoolkit=11.7
+  - pip:
+    - fparser
+    - matplotlib
+    - numpy

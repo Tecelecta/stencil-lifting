@@ -51,7 +51,7 @@ inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func nz(funcName);
     nz(d) = (((d % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    if (vectorize) nz.vectorize(d, 8);
+
     return nz;
 }
 
@@ -61,7 +61,7 @@ inline Func set_zero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func set_zero(funcName);
     set_zero(d) = Expr(0.0);
-    if (vectorize) set_zero.vectorize(d, 8);
+
     return set_zero;
 }
 
@@ -89,9 +89,13 @@ extern "C" {
                                         const int* x_max, const int* x_min);
 }
 
+#ifndef _1D_1
+#define _1D_1 1.5e7
+#endif
+
 int main(int argc, char** argv)
 {
-    const int x_max = 1.5e7;
+    const int x_max = _1D_1;
     const int x_min = 0;
     const int x_range = x_max - x_min;
 

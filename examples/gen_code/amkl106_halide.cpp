@@ -124,12 +124,17 @@ extern "C" {
     );
 }
 
+#ifndef _2D_1
+#define _2D_1 2e4
+#define _2D_2 2e4
+#endif
+
 int main(int argc, char** argv)
 {
     const int x_min = 0;
-    const int x_max = 2e4;
+    const int x_max = _2D_1;
     const int y_min = 0;
-    const int y_max = 2e4;
+    const int y_max = _2D_2;
     
     // amkl106的数组维度：所有数组都是 (x_min-2:x_max+3, y_min-2:y_max+3)
     const int array_x_size = (x_max + 3) - (x_min - 2) + 1;

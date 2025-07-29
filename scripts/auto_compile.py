@@ -15,10 +15,12 @@ def lift_dir(src_dir, dst_dir, sdslc):
             
             cmd = [sdslc, args, src, "-o", dst]
             print("\033[32m" + ' '.join(cmd) + "\033[0m\n")
-            ret = sp.run(cmd, capture_output=True, text=True)
-            # ret = os.system(" ".join(cmd))
-
+            while True:
+                ret = sp.run(cmd, capture_output=True, text=True)
+                if ret.returncode == 0 or len(ret.stderr) > 0:
+                    break
             print("Process return value: %d" % ret.returncode)
+
             if ret.returncode != 0:
                 print("Output:\n %s" % ret.stderr)
             else:

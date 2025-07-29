@@ -145,12 +145,17 @@ extern "C" {
 }
 
 
+#ifndef _2D_1
+#define _2D_1 2e4
+#define _2D_2 2e4
+#endif
+
 int main(int argc, char** argv)
 {
     // printf("Caller Start!\n");
-    const int x_max = 2e4;
+    const int x_max = _2D_1;
     const int x_min = 0;
-    const int y_max = 2e4;
+    const int y_max = _2D_2;
     const int y_min = 0;
     // const int x_max = 2;
     // const int x_min = 0;

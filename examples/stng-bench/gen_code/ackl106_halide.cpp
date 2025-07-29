@@ -73,7 +73,7 @@ inline Func set_zero<2>(const std::string& funcName, bool vectorize)
 }
 
 extern "C" {
-    void advec_cell_kernel_loop93_(const int* j, const int* k,
+    void advec_cell_kernel_loop106_(const int* j, const int* k,
                                   double *advec_vol,
                                   double *density1,
                                   double *ener_flux, 
@@ -90,12 +90,17 @@ extern "C" {
                                   const int* y_max, const int* y_min);
 }
 
+#ifndef _2D_1
+#define _2D_1 1e4
+#define _2D_2 1e4
+#endif
+
 int main(int argc, char** argv)
 {
     // printf("Caller Start!\n");
-    const int x_max = 1e4;  
+    const int x_max = _2D_1;  
     const int x_min = 0;
-    const int y_max = 1e4;  
+    const int y_max = _2D_2;  
     const int y_min = 0;
 
     const int x_range = x_max - x_min;
@@ -155,7 +160,7 @@ int main(int argc, char** argv)
     Buffer<double,2> density1_gpu({x_range+5, y_range+5}, "density1_gpu");
     Buffer<double,2> energy1_gpu({x_range+5, y_range+5}, "energy1_gpu");
 
-    // --------------------------- advec_cell_kernel_loop93 kernel --------------------------
+    // --------------------------- advec_cell_kernel_loop106 kernel --------------------------
     Func cpu_fn_density1("cpu_fn_density1");
     cpu_fn_density1(j, k) = select(
         j >= 2 && j <= (x_range + 2) && k >= 2 && k <= (y_range + 2),
@@ -249,7 +254,7 @@ int main(int argc, char** argv)
     double *vol_flux_y_ = vol_flux_y.get()->begin();
     
     int dummy_j = 0, dummy_k = 0;
-    advec_cell_kernel_loop93_(&dummy_j, &dummy_k,
+    advec_cell_kernel_loop106_(&dummy_j, &dummy_k,
                               advec_vol_, density1_, ener_flux_, energy1_,
                               mass_flux_x_, mass_flux_y_, post_ener_, post_mass_,
                               pre_mass_, pre_vol_, vol_flux_x_, vol_flux_y_,
@@ -315,7 +320,7 @@ int main(int argc, char** argv)
     for (int i = 0; i < times; i++)
     {
         clock_gettime(CLOCK_REALTIME, &t1);
-        advec_cell_kernel_loop93_(&dummy_j, &dummy_k,
+        advec_cell_kernel_loop106_(&dummy_j, &dummy_k,
                                   advec_vol_, density1_, ener_flux_, energy1_,
                                   mass_flux_x_, mass_flux_y_, post_ener_, post_mass_,
                                   pre_mass_, pre_vol_, vol_flux_x_, vol_flux_y_,

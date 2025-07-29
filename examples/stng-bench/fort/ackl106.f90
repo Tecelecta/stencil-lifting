@@ -1,4 +1,4 @@
-SUBROUTINE advec_cell_kernel_loop93(j, k, advec_vol, density1, ener_flux, energy1, &
+SUBROUTINE advec_cell_kernel_loop106(j, k, advec_vol, density1, ener_flux, energy1, &
     mass_flux_x, mass_flux_y, post_ener, post_mass, pre_mass, pre_vol, &
     vol_flux_x, vol_flux_y, x_max, x_min, y_max, y_min)
   IMPLICIT NONE
@@ -32,5 +32,5 @@ SUBROUTINE advec_cell_kernel_loop93(j, k, advec_vol, density1, ener_flux, energy
       energy1(local_j, local_k) = post_ener(local_j, local_k)
     ENDDO
   ENDDO
-END SUBROUTINE advec_cell_kernel_loop93 
+END SUBROUTINE advec_cell_kernel_loop106 
 

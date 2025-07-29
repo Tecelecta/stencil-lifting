@@ -1,6 +1,7 @@
 #pragma once
 
 #include "z3++.h"
+#include <optional>
 
 bool proveTrue(z3::expr a);
 bool proveFalse(z3::expr a);

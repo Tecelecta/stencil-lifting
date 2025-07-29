@@ -51,7 +51,7 @@ inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func nz(funcName);
     nz(d) = (((d % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    if (vectorize) nz.vectorize(d, 8);
+
     return nz;
 }
 
@@ -61,8 +61,7 @@ inline Func init_nonzero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func nz(funcName);
     nz(d1, d2) = ((((d1 + d2) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -72,9 +71,8 @@ inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func nz(funcName);
     nz(d1, d2, d3) = ((((d1 + d2 + d3) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    nz.parallel(d3);
-    if (vectorize) nz.vectorize(d1, 8);
+    
+
     return nz;
 }
 

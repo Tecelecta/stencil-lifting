@@ -54,7 +54,7 @@ inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func nz(funcName);
     nz(d) = (((d % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    if (vectorize) nz.vectorize(d, 8);
+
     return nz;
 }
 
@@ -64,8 +64,7 @@ inline Func init_nonzero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func nz(funcName);
     nz(d1, d2) = ((((d1 + d2) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d2);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -75,8 +74,7 @@ inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func nz(funcName);
     nz(d1, d2, d3) = ((((d1 + d2 + d3) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
-    nz.parallel(d3);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -86,7 +84,7 @@ inline Func set_zero<1>(const std::string& funcName, bool vectorize)
     Var d;
     Func set_zero(funcName);
     set_zero(d) = Expr(0.0);
-    if (vectorize) set_zero.vectorize(d, 8);
+
     return set_zero;
 }
 
@@ -96,8 +94,7 @@ inline Func set_zero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func set_zero(funcName);
     set_zero(d1, d2) = Expr(0.0);
-    set_zero.parallel(d2);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -107,23 +104,28 @@ inline Func set_zero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3;
     Func set_zero(funcName);
     set_zero(d1, d2, d3) = Expr(0.0);
-    set_zero.parallel(d3);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
 extern "C" {
-    void mg_loop18_(const int* i1, const int* i2, const int* i3,
-                    const int* n1, const int* n2, const int* n3,
+    void mg_loop18_(const int* n1, const int* n2, const int* n3,
                     double *z);
 }
+
+
+#ifndef _3D_1
+#define _3D_1 1024
+#define _3D_2 1024
+#define _3D_3 1024
+#endif
 
 int main(int argc, char** argv)
 {
     // printf("Caller Start!\n");
-    const int n1 = 1024;
-    const int n2 = 1024;
-    const int n3 = 1024;
+    const int n1 = _3D_1;
+    const int n2 = _3D_2;
+    const int n3 = _3D_3;
 
     // --------------------------- Preparation --------------------------
     // printf("Prepare the random data\n");
@@ -162,8 +164,8 @@ int main(int argc, char** argv)
 
     Func cpu_fn("cpu_fn");
     cpu_fn(i1, i2, i3) = Expr(0.0);
-    cpu_fn.parallel(i3);
-    if (n1 >= 8) cpu_fn.vectorize(i1, 8);
+    // cpu_fn.parallel(i3);
+    // if (n1 >= 8) cpu_fn.vectorize(i1, 8);
     cpu_fn.compile_jit(cpu_target);
 
     init3_cpu.realize(z_base);
@@ -171,7 +173,7 @@ int main(int argc, char** argv)
     // Calling baseline Fortran
     double *z_ = z_base.get()->begin();
     int unused_i1 = 0, unused_i2 = 0, unused_i3 = 0;
-    mg_loop18_(&unused_i1, &unused_i2, &unused_i3, &n1, &n2, &n3, z_);
+    mg_loop18_(&n1, &n2, &n3, z_);
     
     // Calling halide cpu
     try {
@@ -217,7 +219,7 @@ int main(int argc, char** argv)
     {
         clock_gettime(CLOCK_REALTIME, &t1);
         init3_cpu.realize(z_base);
-        mg_loop18_(&unused_i1, &unused_i2, &unused_i3, &n1, &n2, &n3, z_);
+        mg_loop18_(&n1, &n2, &n3, z_);
         clock_gettime(CLOCK_REALTIME, &t2);
         timespec_diff(t2, t1, elapsed);
         cost_time += toSec(elapsed);
@@ -242,7 +244,7 @@ int main(int argc, char** argv)
         // building gpu func
         Func gpu_fn("gpu_fn");
         gpu_fn(i1, i2, i3) = Expr(0.0);
-        gpu_fn.gpu_tile(i1, i2, i3, bi1, bi2, bi3, ti1, ti2, ti3, 8, 8, 8)
+        gpu_fn//.gpu_tile(i1, i2, i3, bi1, bi2, bi3, ti1, ti2, ti3, 8, 8, 8)
               .compile_jit(gpu_target);
         
         // warmup

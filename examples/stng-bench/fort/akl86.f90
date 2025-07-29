@@ -1,4 +1,4 @@
-SUBROUTINE accelerate_kernel_loop86(stepbymass,viscosity,x_max,x_min,y_max,y_min,yarea,yvel1)
+SUBROUTINE accelerate_kernel_loop86(stepbymass,viscosity,yarea,yvel1,x_max,x_min,y_max,y_min)
 INTEGER :: j
 INTEGER :: k
 INTEGER :: x_max
@@ -11,7 +11,9 @@ REAL(kind=8), DIMENSION((x_min - 2):(x_max + 2),(y_min - 2):(y_max + 3)) :: yare
 REAL(kind=8), DIMENSION((x_min - 2):(x_max + 3),(y_min - 2):(y_max + 3)) :: yvel1
 DO k = y_min, y_max + 1
 DO j = x_min, x_max + 1
-yvel1(j,k) = yvel1(j,k) - stepbymass(j,k) * (yarea(j,k) * (viscosity(j,k) - viscosity(j,k - 1)) + yarea(j - 1,k) * (viscosity(j - 1,k) - viscosity(j - 1,k - 1)))
+yvel1(j,k) = yvel1(j,k) - stepbymass(j,k) * &
+             (yarea(j,k) * (viscosity(j,k) - viscosity(j,k - 1)) + &
+              yarea(j - 1,k) * (viscosity(j - 1,k) - viscosity(j - 1,k - 1)))
 END DO
 END DO
 END SUBROUTINE 

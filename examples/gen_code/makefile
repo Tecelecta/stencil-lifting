@@ -10,12 +10,21 @@ OBJS = $(SRC:_halide.cpp=.drv.o) $(SRC:_halide.cpp=.fort.o)
 TARGET = $(SRC:_halide.cpp=.halide)
 
 CXX = g++
+# TODO: change to flang
 FORT = gfortran
-ifeq ($(MODE), debug)
-CFLAGS = -g -O0
-else
-CFLAGS = 
+
+ifeq ($(SCALE), down)
+CFLAGS = -D_3D_1=256 -D_3D_2=256 -D_3D_3=256 \
+         -D_2D_1=4e3 -D_2D_2=4e3 \
+		 -D_1D_1=1e7
 endif
+
+ifeq ($(MODE), debug)
+CFLAGS += -g -O0
+else
+CFLAGS += -O3
+endif
+
 
 .SECONDARY: $(addprefix $(OBJ)/, $(OBJS))
 

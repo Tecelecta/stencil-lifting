@@ -47,9 +47,9 @@ if __name__ == "__main__":
     dst_dir = cwd
 
     for step in out_tree:
+        dst_dir = os.path.join(dst_dir, step)
         if not os.path.exists(os.path.join(dst_dir, step)):
             os.mkdir(dst_dir)
-        dst_dir = os.path.join(dst_dir, step)
 
     for dir_name in dir_names:
         print(f"Translating Fortran source code in \033[32m{dir_name}\033[0m ...")

@@ -174,13 +174,19 @@ extern "C" {
                          double *dux, double *duy);
 }
 
+#ifndef _2D_1
+#define _2D_1 5e3
+#define _2D_2 5e3
+#endif
+
+
 int main(int argc, char** argv)
 {
     // printf("ComputeGradient Caller Start!\n");
     
     // Array dimensions based on typical CFD grid
-    const int NI = 5000;  // Grid size in i-direction
-    const int NJ = 5000;  // Grid size in j-direction
+    const int NI = _2D_1;  // Grid size in i-direction
+    const int NJ = _2D_2;  // Grid size in j-direction
     const int GCW0 = 2; // Ghost cell width in i-direction
     const int GCW1 = 2; // Ghost cell width in j-direction
     const int NCOMP = 4; // Number of components

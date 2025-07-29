@@ -73,9 +73,7 @@ inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3, fused;
     Func nz(funcName);
     nz(d1, d2, d3) = ((((d1+1 + (d2+1)*10 + (d3+1)*100)) + Expr(1e-5)) / Expr(100.0)) * cast<double>(10);
-    nz.fuse(d2, d3, fused);
-    nz.parallel(fused);
-    if (vectorize) nz.vectorize(d1, 8);
+
     return nz;
 }
 
@@ -95,9 +93,7 @@ inline Func set_zero<2>(const std::string& funcName, bool vectorize)
     Var d1, d2;
     Func set_zero(funcName);
     set_zero(d1, d2) = Expr(0.0);
-    set_zero.parallel(d1)
-            .parallel(d2);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -107,9 +103,7 @@ inline Func set_zero<3>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3, fuse;
     Func set_zero(funcName);
     set_zero(d1, d2, d3) = Expr(0.0);
-    set_zero.fuse(d2, d3, fuse)
-            .parallel(fuse);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -159,14 +153,20 @@ extern "C" {
     );
 }
 
+#ifndef _3D_1
+#define _3D_1 512
+#define _3D_2 512
+#define _3D_3 512
+#endif
+
 int main(int argc, char **argv)
 {
-    int m1k = 1030;
-    int m2k = 1030;
-    int m3k = 1030;
-    int m1j = 512;
-    int m2j = 512;
-    int m3j = 512;
+    int m1k = 2*_3D_1 + 6;
+    int m2k = 2*_3D_2 + 6;
+    int m3k = 2*_3D_3 + 6;
+    int m1j = _3D_1;
+    int m2j = _3D_2;
+    int m3j = _3D_3;
     int m = 1035;
     // int m1k = 12;
     // int m2k = 12;

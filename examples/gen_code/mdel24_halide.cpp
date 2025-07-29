@@ -153,14 +153,20 @@ extern "C" {
     );
 }
 
+#ifndef _3D_1
+#define _3D_1 512
+#define _3D_2 512
+#define _3D_3 512
+#endif
+
 int main(int argc, char** argv)
 {
     const int its = 0;              //changed to 1024
-    const int ite = 1024;
+    const int ite = _3D_1;
     const int jts = 0;
-    const int jte = 1024;
+    const int jte = _3D_2;
     const int kts = 0;
-    const int kte = 1024;
+    const int kte = _3D_3;
 
     // const int its = 0;
     // const int ite = 5;

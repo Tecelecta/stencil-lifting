@@ -8,10 +8,8 @@ import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import Axes
 import numpy as np
-import pandas as pd
 
 from typing import *
-from pandas import DataFrame
 
 """
 Style table
@@ -95,10 +93,6 @@ matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 
-def open_excel_with_pandas(fname: str, sheet: str = None, index_col=0):
-    return pd.read_excel(fname, sheet_name=sheet, index_col=index_col)
-
-
 def extract_label_and_array(dic: Dict, sort_with: Callable = None):
     """
     dict type input data parser
@@ -120,30 +114,6 @@ def extract_label_and_array(dic: Dict, sort_with: Callable = None):
         
     return labels, arrays
 
-def extract_database_from_excel(fname: str, sheets: List[str]):
-    res = None
-    xmax = []
-    for sht in sheets:
-        xmax.append(1e9)
-        df = pd.read_excel(fname, sht)
-        if res is None:
-            res = {}
-            for col in df:
-                res[col] = []
-        for col in df:
-            recs = df[col].loc[df[col].notna()].to_list()
-            xmax[-1] = min([xmax[-1],] + flattern(recs))
-            res[col].append(np.array(recs))
-    print(f"min = {min(xmax)}")
-    vals = []
-    for v in res.values():
-        add = []
-        for i, ar in enumerate(v):
-            # add.append(xmax[i] / ar)
-            add.append(ar)
-        vals.append(add)
-
-    return list(res.keys()), vals
 
 def varmean(ll: List[List]):
     def geo_mean_overflow(iterable):
@@ -848,4 +818,4 @@ if __name__ == "__main__":
     
     # plot_stng_tab(in_dir, out_dir)
     plot_ablation(in_dir, out_dir)
-    # plot_violin(in_dir, out_dir)
+    plot_violin(in_dir, out_dir)

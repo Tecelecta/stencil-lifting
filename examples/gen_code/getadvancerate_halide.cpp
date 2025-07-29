@@ -122,11 +122,7 @@ inline Func set_zero<4>(const std::string& funcName, bool vectorize)
     Var d1, d2, d3, d4;
     Func set_zero(funcName);
     set_zero(d1, d2, d3, d4) = Expr(0.0);
-    set_zero.parallel(d1);
-    set_zero.parallel(d2);
-    set_zero.parallel(d3);
-    set_zero.parallel(d4);
-    if (vectorize) set_zero.vectorize(d1, 8);
+
     return set_zero;
 }
 
@@ -164,16 +160,22 @@ extern "C" {
                          double* advancerate);
 }
 
+#ifndef _3D_1
+#define _3D_1 400
+#define _3D_2 400
+#define _3D_3 400
+#endif
+
 int main(int argc, char** argv)
 {
     // printf("getadvancerate Caller Start!\n");
     
     const int ifirst0 = 2;
-    const int ilast0 = 400 + 2;
+    const int ilast0 = _3D_1 + 2;
     const int ifirst1 = 2; 
-    const int ilast1 = 400 + 2;
+    const int ilast1 = _3D_2 + 2;
     const int ifirst2 = 2;
-    const int ilast2 = 400 + 2;
+    const int ilast2 = _3D_3 + 2;
 
     const int ic0_range = ilast0 - ifirst0 + 1;
     const int ic1_range = ilast1 - ifirst1 + 1;
