@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     for step in out_tree:
         dst_dir = os.path.join(dst_dir, step)
-        if not os.path.exists(os.path.join(dst_dir, step)):
+        if not os.path.exists(dst_dir):
             os.mkdir(dst_dir)
 
     for dir_name in dir_names:

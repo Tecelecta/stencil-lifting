@@ -274,6 +274,8 @@ def statistic_lifting_time(dic: Dict):
     ret = {}
 
     for stat in dic.values():
+        if stat['time'] is None:
+            continue
         dim = stat['dim']
         _guarded_lookup(ret, dim)
         _guarded_append(ret[dim], f"{stat['pt']*stat['nout']}", stat['time'])
@@ -662,7 +664,7 @@ def plot_ablation(input_prefix, output_prefix):
     dats = [[None]*7, [None]*7, [None]*7, [None]*7]
     raws = [None]*4
     for k,v in lift_time_obj.items():
-        v *= 50
+        # v *= 50
         if k in knames:
             pre_suf = k.split("_")
             for i, kn in enumerate(prefix):
@@ -704,8 +706,6 @@ def plot_ablation(input_prefix, output_prefix):
 def plot_violin(input_prefix, output_prefix):
     fig = plt.figure(figsize=[11,2],layout='constrained')
     axes = flattern(fig.subplots(1, 4, squeeze=False))
-
-    knames = nameset.stng()
     
     with open(osp.join('scripts','stng-perf.json'), 'r') as f:
         stng_obj = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
@@ -727,15 +727,17 @@ def plot_violin(input_prefix, output_prefix):
 
     with open(osp.join(input_prefix, 'sl-lift.json'), 'r') as f:
         sl_obj = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
+        sl_dic = {}
         for k in sl_obj.keys():
-            if k not in knames:
+            if k not in stng_obj.keys():
                 continue
             time = sl_obj[k]
-            sl_obj[k] = {}
-            sl_obj[k]['time'] = time
-            sl_obj[k]['pt'] = stng_obj[k]['pt']
-            sl_obj[k]['nout'] = stng_obj[k]['nout']
-        sl_stat = statistic_lifting_time(sl_obj)
+            sl_dic[k] = {}
+            sl_dic[k]['time'] = time
+            sl_dic[k]['dim'] = stng_obj[k]['dim']
+            sl_dic[k]['pt'] = stng_obj[k]['pt']
+            sl_dic[k]['nout'] = stng_obj[k]['nout']
+        sl_stat = statistic_lifting_time(sl_dic)
     
     for ax, dim in zip(axes[2:], range(2,4)):
         xlab, dat = extract_label_and_array(sl_stat[dim], sort_with=lambda x: int(x[0]))
@@ -753,8 +755,8 @@ def plot_violin(input_prefix, output_prefix):
     figstyle(fig, "y", axes, "Lifting Time (s)", ylabel_style, is_plot_grid=True)
     figstyle(fig, "x", axes, ['Complexity']*4, xlabel_style)
     figstyle(fig, 'title', axes, ["2D Stencil", "3D Stencil", "2D Stencil", "3D Stencil"], title_style)
-    plt.show()
-    # fig.savefig(osp.join(output_prefix, "scale.pdf"))
+    # plt.show()
+    fig.savefig(osp.join(output_prefix, "scale.pdf"))
 
 
 def plot_stng_tab(input_prefix, output_prefix):
@@ -762,9 +764,7 @@ def plot_stng_tab(input_prefix, output_prefix):
         "Kernel", 
         "Fortran Time (ms)", 
         "Halide CPU Time (ms)", 
-        "Halide CPU Speedup",  
         "Halide GPU Time (ms)", 
-        "Halide GPU Speedup", 
         "Lifting Time of STNG (s)",
         "Lifting Time of Stencil-Lifting (s)", 
         "Speedup over STNG"]
@@ -785,15 +785,50 @@ def plot_stng_tab(input_prefix, output_prefix):
     
     dic = {}
     for ker in knames:
+        if all_base[ker]['time'] is None:
+            continue
         row = {}
         row[header[1]] = all_perf[ker]['fort'] if ker in all_perf.keys() else "/"
         row[header[2]] = all_perf[ker]['hcpu'] if ker in all_perf.keys() else "/"
-        row[header[3]] = all_perf[ker]['fort'] / all_perf[ker]['hcpu'] if ker in all_perf.keys() else "/"
-        row[header[4]] = all_perf[ker]['hgpu'] if ker in all_perf.keys() else "/"
-        row[header[5]] = all_perf[ker]['fort'] / all_perf[ker]['hgpu'] if ker in all_perf.keys() else "/"
-        row[header[6]] = all_base[ker]['time'] if ker in all_base.keys() else "/"
-        row[header[7]] = all_lift[ker] if ker in all_lift.keys() else "/"
-        row[header[8]] = all_base[ker]['time'] / all_lift[ker] if ker in all_base.keys() else "/"
+        row[header[3]] = all_perf[ker]['hgpu'] if ker in all_perf.keys() else "/"
+        row[header[4]] = all_base[ker]['time'] if ker in all_base.keys() else "/"
+        row[header[5]] = all_lift[ker] if ker in all_lift.keys() else "/"
+        row[header[6]] = all_base[ker]['time'] / all_lift[ker] if ker in all_base.keys() else "/"
+        dic[ker] = row
+    
+    ofname = osp.join(output_prefix, 'table-2.md')
+    render_markdown(header, dic, ofname)
+
+
+def plot_our_tab(input_prefix, output_prefix):
+    header = [
+        "Kernel", 
+        "Fortran Time (ms)", 
+        "Halide CPU Time (ms)", 
+        "Halide GPU Time (ms)", 
+        "Lifting Time of Stencil-Lifting (s)"]
+
+    knames = nameset.benchmarks()
+    
+    base_file = osp.join('scripts', 'stng-perf.json')
+    with open(base_file, 'r') as f:
+        all_base = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x)) 
+
+    perf_file = osp.join(input_prefix, 'sl-perf.json')
+    with open(perf_file, 'r') as f:
+        all_perf = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
+    
+    lift_file = osp.join(input_prefix, 'sl-lift.json')
+    with open(lift_file, 'r') as f:
+        all_lift = json.load(f, parse_float=lambda x: float(x), parse_int=lambda x: int(x))
+    
+    dic = {}
+    for ker in knames:
+        row = {}
+        row[header[1]] = all_perf[ker]['fort'] if ker in all_perf.keys() else "/"
+        row[header[2]] = all_perf[ker]['hcpu'] if ker in all_perf.keys() else "/"
+        row[header[3]] = all_perf[ker]['hgpu'] if ker in all_perf.keys() else "/"
+        row[header[4]] = all_lift[ker] if ker in all_lift.keys() else "/"
         dic[ker] = row
     
     ofname = osp.join(output_prefix, 'table-2.md')
@@ -816,6 +851,7 @@ if __name__ == "__main__":
     if not osp.exists(out_dir):
         os.mkdir(out_dir)
     
-    # plot_stng_tab(in_dir, out_dir)
+    plot_stng_tab(in_dir, out_dir)
+    plot_our_tab(in_dir, out_dir)
     plot_ablation(in_dir, out_dir)
     plot_violin(in_dir, out_dir)

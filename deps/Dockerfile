@@ -44,7 +44,7 @@ RUN cmake -S llvm -B build \
         -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra;flang" \
         -DLLVM_ENABLE_RUNTIMES=compiler-rt \
-        -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+        -DLLVM_TARGETS_TO_BUILD="WebAssembly;X86;NVPTX" \
         -DLLVM_ENABLE_ASSERTIONS=ON \
         -DLLVM_ENABLE_EH=OFF \
         -DLLVM_ENABLE_RTTI=ON \
@@ -59,7 +59,7 @@ RUN cmake -S llvm -B build \
 RUN cmake --build build -j4 && \
     cmake --install build --prefix $(pwd)/distrib 
 
-RUN cmake --build build clean
+RUN cmake --build build -t clean
 
 WORKDIR /apps/z3
 
@@ -67,7 +67,7 @@ RUN cmake -S . -B build && \
     cmake --build build -j4 && \
     cmake --install build --prefix $(pwd)/distrib 
 
-RUN cmake --build build clean
+RUN cmake --build build -t clean
 
 WORKDIR /apps/boost
 
@@ -83,6 +83,18 @@ RUN cmake -S . -B build \
     cmake --build build -j4 && \
     cmake --install build --prefix $(pwd)/distrib
 
+RUN cmake --build build -t clean
+
+WORKDIR /apps/stencil-lifting
+
+RUN cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release \
+               -DZ3_DIR=/apps/z3/distrib/lib/cmake/z3 \
+               -DBoost_DIR=/apps/boost/distrib/lib/cmake && \
+    cmake --build build/release
     
 
+RUN pip3 install -r ./deps/requirements.txt
+
+ENV HALIDE_DISTRIB_PATH=/apps/Halide/distrib
+ENV LD_LIBRARY_PATH=${HALIDE_DISTRIB_PATH}/lib
 
