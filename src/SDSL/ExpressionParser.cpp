@@ -19,9 +19,9 @@ START: {
 		nextToken();
 		goto LEFT_VALUE;
 	case Token::Category::CONSTANT_NUMERAL:
-		ERROR("立即数不能作为左值")
+		ERROR("Literature cannot be lvalue")
 	default:
-		ERROR("在分析左值表达式时，未发现左值")
+		ERROR("In LHS expr: lvalue not found")
 	}
 }
 
@@ -29,7 +29,7 @@ LEFT_VALUE: {
 	switch (readToken().category)
 	{
 	case Token::Category::LBRACKET:
-		RECURSE(ArraySubscriptExpressionParser, "在分析数组表达式中，发现语法错误");
+		RECURSE(ArraySubscriptExpressionParser, "In array expr: syntax error");
 		astNodeReduce(AST::Category::ARRAY_ELEMENT, 2);
 		goto LEFT_VALUE;
 	case Token::Category::DOT:
@@ -42,13 +42,13 @@ LEFT_VALUE: {
 			astNodeReduce(AST::Category::STRUCT_ELEMENT, 3);
 			goto LEFT_VALUE;
 		}
-		ERROR("在分析结构体表达式中，结构体成员不是标识符")
+		ERROR("In structure expr: member is not identifier")
 	case Token::Category::ASG:
 	case Token::Category::COMPUTE_ASG:
 	case Token::Category::COMMA:
 		goto SUCCESS;
 	default:
-		ERROR("在分析左值表达式中，发现不支持的符号")
+		ERROR("In LHS expr: unsupported operator")
 	}
 }
 
@@ -110,7 +110,7 @@ START: {
 	switch (readToken().category)
 	{
 	case Token::Category::LBRACE:
-		RECURSE(ArgumentListExpressionParser, "在分析参数列表表达式时，元组初始化的语法错误");
+		RECURSE(ArgumentListExpressionParser, "In argument list: syntax error in tuple initialization");
 		goto COMPLETE_EXPR;
 	case Token::Category::LPAREN:
 		astLeafCreate();
@@ -136,13 +136,13 @@ ID: {
 	{
 	case Token::Category::IDENTIFIER:
 	case Token::Category::CONSTANT_NUMERAL:
-		ERROR("在分析右值表达式时，表达式连续出现两个标识符或立即数")
+		ERROR("In RHS expr: contigious identifier or literature")
 	case Token::Category::LPAREN:
 	case Token::Category::LBRACKET:
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -267,11 +267,11 @@ ID_ID: {
 	switch (readToken().category)
 	{
 	case Token::Category::LPAREN:
-		RECURSE(ArgumentListExpressionParser, "在实参列表表达式中发现语法错误");
+		RECURSE(ArgumentListExpressionParser, "In agrument list expr: syntax error");
 		astNodeReduce(AST::Category::FUNCTION_CALL, 2);
 		goto ID_ID_EXPR;
 	case Token::Category::LBRACKET:
-		RECURSE(ArraySubscriptExpressionParser, "在数组表达式中发现语法错误");
+		RECURSE(ArraySubscriptExpressionParser, "In array expr: syntax error");
 		astNodeReduce(AST::Category::ARRAY_ELEMENT, 2);
 		goto ID_ID_EXPR;
 	case Token::Category::DOT:
@@ -352,7 +352,7 @@ UN_ID: {
 	switch (readToken().category)
 	{
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::LPAREN:
 	case Token::Category::LBRACKET:
 	case Token::Category::DOT:
@@ -423,7 +423,7 @@ ID_POW: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("乘方符号'**'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after power operator '**'")
 	default:
 		ERROR("ID_POW")
 	}
@@ -438,7 +438,7 @@ ID_POW_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -498,7 +498,7 @@ ID_MUL: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("乘法除法取模运算'*/%'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after arithmetic operator '*/%'")
 	default:
 		ERROR("ID_MUL")
 	}
@@ -513,7 +513,7 @@ ID_MUL_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -569,7 +569,7 @@ ID_ADD: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("加法减法运算'+-'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after arithmetic operator '+-'")
 	default:
 		ERROR("ID_ADD")
 	}
@@ -584,7 +584,7 @@ ID_ADD_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -641,7 +641,7 @@ ID_SF: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("移位运算'<<''>>'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after shifting operator '<<' '>>'")
 	default:
 		ERROR("ID_SF")
 	}
@@ -656,7 +656,7 @@ ID_SF_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::SHL:	case Token::Category::ASHR:
 	case Token::Category::FOLLOW_SET:
 		goto SF_EXPR;
@@ -697,7 +697,7 @@ ID_REL: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("关系运算'<''<=''>''>=''==''!='后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after relation operator '<''<=''>''>=''==''!='")
 	default:
 		ERROR("ID_REL")
 	}
@@ -712,7 +712,7 @@ ID_REL_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -769,7 +769,7 @@ ID_BAND: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("位与运算'&'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after bit-AND operator '&'")
 	default:
 		ERROR("ID_BAND")
 	}
@@ -784,7 +784,7 @@ ID_BAND_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::BIT_AND: case Token::Category::BIT_XOR: case Token::Category::BIT_OR:
 	case Token::Category::FOLLOW_SET:
 		goto BAND_EXPR;
@@ -829,7 +829,7 @@ ID_BXOR: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("位异或运算'^'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after bit-XOR operator '^'")
 	default:
 		ERROR("ID_BXOR")
 	}
@@ -844,7 +844,7 @@ ID_BXOR_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::BIT_AND:
 		astLeafCreate();
 		nextToken();
@@ -891,7 +891,7 @@ ID_BOR: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("位或运算'|'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after bit-OR operator '|'")
 	default:
 		ERROR("ID_BOR")
 	}
@@ -906,7 +906,7 @@ ID_BOR_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::BIT_AND:
 		astLeafCreate();
 		nextToken();
@@ -955,7 +955,7 @@ ID_LAND: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("逻辑与运算'&&'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after logic AND operator '&&'")
 	default:
 		ERROR("ID_LAND")
 	}
@@ -970,7 +970,7 @@ ID_LAND_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -1029,7 +1029,7 @@ ID_LOR: {
 		nextToken();
 		goto LPAREN;
 	case Token::Category::RPAREN:
-		ERROR("逻辑或运算'||'后有不完整的括号表达式")
+		ERROR("Incomplete bracket expr after logic OR operator '||'")
 	default:
 		ERROR("ID_LOR")
 	}
@@ -1044,7 +1044,7 @@ ID_LOR_ID: {
 	case Token::Category::DOT:
 		goto ID_ID;
 	case Token::Category::NOT: case Token::Category::BIT_NOT:
-		ERROR("单目运算符不应出现在标识符右侧")
+		ERROR("Unary operation on the right side of identifier")
 	case Token::Category::POW:
 		astLeafCreate();
 		nextToken();
@@ -1101,7 +1101,7 @@ COMPLETE_EXPR: {
 	case Token::Category::FOLLOW_SET:
 		goto SUCCESS;
 	default:
-		ERROR("表达式后存在多余的东西")
+		ERROR("Redundant tokens after expression")
 	}
 }
 

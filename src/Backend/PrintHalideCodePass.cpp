@@ -341,7 +341,7 @@ bool PrintHalideProcedurePass::runOnTrivial(uint32_t i)
 			}
 			else if (auto loop = dynamic_cast<IterateLoop*>(section))
 			{
-				throw std::runtime_error("Halide不支持串行循环");
+				throw std::runtime_error("Halide do not support serial loop");
 			}
 			else if (auto loop = dynamic_cast<ParallelLoop*>(section))
 			{

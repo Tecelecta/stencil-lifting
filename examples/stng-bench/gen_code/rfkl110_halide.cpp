@@ -1,0 +1,308 @@
+#include <ctime>
+#include <Halide.h>
+
+using namespace Halide;
+using namespace std;
+
+inline void timespec_diff(const struct timespec &a, const struct timespec &b, struct timespec &result)
+{
+    result.tv_sec = a.tv_sec - b.tv_sec;
+    result.tv_nsec = a.tv_nsec - b.tv_nsec;
+    if (result.tv_nsec < 0)
+    {
+        --result.tv_sec;
+        result.tv_nsec += 1000000000L;
+    }
+}
+inline double toSec(const struct timespec &t) { return t.tv_sec + t.tv_nsec / 1e9L; }
+
+Target find_gpu_target()
+{
+    Target target = get_host_target();
+
+    std::vector<Target::Feature> features_to_try;
+    features_to_try.push_back(Target::CUDA);
+
+    for (Target::Feature f : features_to_try)
+    {
+        Target new_target = target.with_feature(f);
+        if (host_supports_target_device(new_target))
+        {
+            return new_target;
+        }
+    }
+
+    printf("Requested GPU(s) are not supported. (Do you have the proper hardware and/or driver installed?)\n");
+    return target;
+}
+
+template <int dim>
+Func init_nonzero(const std::string&, bool) { return Func(Expr(0.0));}
+
+template <int dim>
+Func set_zero(const std::string&, bool) { return Func(Expr(0.0));}
+
+template<>
+inline Func init_nonzero<1>(const std::string& funcName, bool vectorize)
+{
+    Var d;
+    Func nz(funcName);
+    nz(d) = (((d % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
+
+    return nz;
+}
+
+template<>
+inline Func init_nonzero<2>(const std::string& funcName, bool vectorize)
+{
+    Var d1, d2;
+    Func nz(funcName);
+    nz(d1, d2) = ((((d1 + d2) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
+
+    return nz;
+}
+
+template<>
+inline Func init_nonzero<3>(const std::string& funcName, bool vectorize)
+{
+    Var d1, d2, d3;
+    Func nz(funcName);
+    nz(d1, d2, d3) = ((((d1 + d2 + d3) % 13) + Expr(0.1)) / Expr(13.0)) * cast<double>(10);
+    
+
+    return nz;
+}
+
+template <>
+inline Func set_zero<1>(const std::string& funcName, bool vectorize)
+{
+    Var d;
+    Func set_zero(funcName);
+    set_zero(d) = Expr(0.0);
+
+    return set_zero;
+}
+
+template <>
+inline Func set_zero<2>(const std::string& funcName, bool vectorize)
+{
+    Var d1, d2;
+    Func set_zero(funcName);
+    set_zero(d1, d2) = Expr(0.0);
+
+    return set_zero;
+}
+
+template <>
+inline Func set_zero<3>(const std::string& funcName, bool vectorize)
+{
+    Var d1, d2, d3;
+    Func set_zero(funcName);
+    set_zero(d1, d2, d3) = Expr(0.0);
+
+    return set_zero;
+}
+
+inline Func targetFunction(const std::string& funcName,
+                           Buffer<double, 2>& energy0,
+                           const Buffer<double, 2>& energy1,
+                           const Expr x_min, const Expr x_max,
+                           const Expr y_min, const Expr y_max)
+{
+    Var j("j"), k("k");
+    Func target(funcName);
+    auto roi = x_min <= j && j <= x_max && 
+               y_min <= k && k <= y_max;
+    
+    // Fortran: energy0(j,k) = energy1(j,k)
+    // Convert Fortran indices to C++ buffer indices
+    // Fortran j,k range: [x_min, x_max], [y_min, y_max]
+    // C++ j,k range: [0, x_max-x_min], [0, y_max-y_min]
+    // Array buffer indices: j-x_min+2, k-y_min+2
+    target(j, k) = select(roi, 
+        energy1(j - x_min + 2, k - y_min + 2),
+        energy0(j, k));
+    return target;
+}
+
+extern "C" {
+    void reset_field_kernel_loop110_(
+        double *energy0,
+        double *energy1,
+        const int* x_max, const int* x_min,
+        const int* y_max, const int* y_min);
+}
+
+#ifndef _2D_1
+#define _2D_1 2e4
+#define _2D_2 2e4
+#endif
+
+int main(int argc, char** argv)
+{
+    const int x_max = _2D_1;
+    const int x_min = 0;
+    const int y_max = _2D_2;
+    const int y_min = 0;
+
+    const int x_range = x_max - x_min;
+    const int y_range = y_max - y_min;
+
+    // --------------------------- Preparation --------------------------
+    bool with_gpu = true;
+    
+    Var j("j"), k("k");
+    Var bj, bk, tj, tk;
+
+    Target gpu_target = find_gpu_target();
+    if (!gpu_target.has_gpu_feature())
+    {
+        printf("Don't have a gpu!\n");
+        with_gpu = false;
+    }
+    Target cpu_target = get_host_target();
+
+    Func init2_cpu = init_nonzero<2>("init2", x_range + 5 >= 8);
+    Func zero2_cpu = set_zero<2>("zero2", x_range + 5 >= 8);
+    Func init2_gpu = init2_cpu;
+    Func zero2_gpu = zero2_cpu;
+    init2_cpu.compile_jit(cpu_target);
+    zero2_cpu.compile_jit(cpu_target);
+    if (with_gpu)
+    {
+        init2_gpu.compile_jit(gpu_target);
+        zero2_gpu.compile_jit(gpu_target);
+    }
+
+    // Array dimensions:
+    // energy0, energy1: (x_min-2):(x_max+2), (y_min-2):(y_max+2) -> (x_range + 5) × (y_range + 5)
+    Buffer<double, 2> energy1({x_range + 5, y_range + 5}, "energy1"), energy1_g(energy1);
+    Buffer<double, 2> energy0_base({x_range + 5, y_range + 5}, "energy0");
+    Buffer<double, 2> energy0_cpu({x_range + 1, y_range + 1}, "energy0");
+    Buffer<double, 2> energy0_gpu({x_range + 1, y_range + 1}, "energy0");
+
+    // --------------------------- reset_field_kernel_loop110 kernel --------------------------
+    
+    // building cpu func
+    Func cpu_fn = targetFunction("reset_field_kernel_loop110_cpu", 
+                                energy0_cpu, energy1,
+                                Expr(x_min), Expr(x_max), 
+                                Expr(y_min), Expr(y_max));
+    cpu_fn.parallel(k);
+    if (x_range + 1 >= 8) cpu_fn.vectorize(j, 8);
+    cpu_fn.compile_jit(cpu_target);
+
+    // IO initialization
+    init2_cpu.realize(energy1);
+    init2_cpu.realize(energy0_base);
+
+    // Calling baseline
+    double *energy0_ = energy0_base.get()->begin();
+    double *energy1_ = energy1.get()->begin();
+    reset_field_kernel_loop110_(
+        energy0_,
+        energy1_,
+        &x_max, &x_min, &y_max, &y_min);
+    
+    // Calling halide cpu
+    try {
+        zero2_cpu.realize(energy0_cpu);
+        cpu_fn.realize(energy0_cpu);
+    } catch (RuntimeError &e) {
+        std::cerr << e.what();
+        return 1;
+    }
+
+    double correctness_1 = 0.0;
+    int errors = 0;
+    for (int k_idx = 0; k_idx < y_range + 1; k_idx++) {
+        for (int j_idx = 0; j_idx < x_range + 1; j_idx++) {
+            // Fortran loop: j from x_min to x_max, k from y_min to y_max
+            // C++ loop: j_idx from 0 to x_range, k_idx from 0 to y_range
+            // energy0_base index for Fortran energy0(j_idx+x_min, k_idx+y_min) is (j_idx+x_min-x_min+2, k_idx+y_min-y_min+2) = (j_idx+2, k_idx+2)
+            
+            double diff = abs(energy0_base(j_idx + 2, k_idx + 2) - energy0_cpu(j_idx, k_idx));
+            if (diff >= 1e-10)
+            {
+                if (errors < 10) {
+                    printf("output [%d, %d] = Fortran: %lf | Halide: %lf | diff: %e\n", 
+                           j_idx, k_idx, energy0_base(j_idx + 2, k_idx + 2), energy0_cpu(j_idx, k_idx), diff);
+                }
+                errors++;
+            }
+            correctness_1 += diff;
+        }
+    }
+    
+    if (errors > 0) {
+        printf("Total errors: %d, sum of differences: %e\n", errors, correctness_1);
+    }
+
+    int times = 5;
+    double cost_time = 0;
+    struct timespec t1, t2, elapsed;
+    clock_gettime(CLOCK_REALTIME, &t1);
+    for (int i = 0; i < times; i++)
+    {
+        clock_gettime(CLOCK_REALTIME, &t1);
+        reset_field_kernel_loop110_(
+            energy0_,
+            energy1_,
+            &x_max, &x_min, &y_max, &y_min);
+        clock_gettime(CLOCK_REALTIME, &t2);
+        timespec_diff(t2, t1, elapsed);
+        cost_time += toSec(elapsed);
+    }
+    printf("legacy code: %lfms\n", cost_time/times*1000);
+
+    cost_time = 0;
+    clock_gettime(CLOCK_REALTIME, &t1);
+    for (int i = 0; i < times; i++)
+    {
+        clock_gettime(CLOCK_REALTIME, &t1);
+        cpu_fn.realize(energy0_cpu);
+        clock_gettime(CLOCK_REALTIME, &t2);
+        timespec_diff(t2, t1, elapsed);
+        cost_time += toSec(elapsed);
+    }
+    printf("lifted cpu: %lfms\n", cost_time/times*1000);
+
+    if (with_gpu)
+    {
+        // building gpu func
+        Func gpu_fn = targetFunction("reset_field_kernel_loop110_gpu", 
+                                    energy0_gpu, energy1_g,
+                                    Expr(x_min), Expr(x_max), 
+                                    Expr(y_min), Expr(y_max));
+        gpu_fn.gpu_tile(j, k, bj, bk, tj, tk, 2048, 1)
+              .vectorize(tj, 2)
+              .compile_jit(gpu_target);
+        
+        // GPU IO initialization
+        energy1_g.copy_from(energy1);
+        
+        // warmup
+        try {
+            zero2_gpu.realize(energy0_gpu);
+            gpu_fn.realize(energy0_gpu);
+        } catch (RuntimeError &e) {
+            std::cerr << e.what();
+            return -1;
+        }
+
+        cost_time = 0;
+        times = 100;
+        clock_gettime(CLOCK_REALTIME, &t1);
+        for (int i = 0; i < times; i++)
+        {
+            gpu_fn.realize(energy0_gpu);
+        }
+        energy0_gpu.copy_to_host();
+        clock_gettime(CLOCK_REALTIME, &t2);
+        timespec_diff(t2, t1, elapsed);
+        cost_time = toSec(elapsed);
+        printf("lifted gpu: %lfms\n\n", cost_time/times*1000);
+    }
+
+    return 0;
+} 

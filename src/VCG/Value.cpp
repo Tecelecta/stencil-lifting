@@ -22,13 +22,13 @@ void OperationValue::validate() const
 		auto dependeny = srcVector[i];
 		if (dependeny == nullptr)
 		{
-			throw std::runtime_error("源操作数是nullptr");
+			throw std::runtime_error("Src operand if nullptr");
 		}
 		if (auto var_dependeny = dynamic_cast<VariableValue*>(dependeny))
 		{
 			if (var_dependeny->getSection() != this->getSection())
 			{
-				throw std::runtime_error("操作值的源操作数所属的Section必须是和变量所属的Section一致");
+				throw std::runtime_error("Parent section of src must be consistant with OperationValue");
 			}
 		}
 		if (!dependeny->getType().canBeArgument(op.getParameterType(i)))
@@ -36,12 +36,12 @@ void OperationValue::validate() const
 			std::cerr << dependeny->getType().toString() << std::endl;
 			std::cerr << op.toString() << std::endl;
 			std::cerr << op.getParameterType(i).toString() << std::endl;
-			throw std::runtime_error("源操作数与操作类型不匹配");
+			throw std::runtime_error("Operand type do not match operation type");
 		}
 	}
 	if (!op.getReturnType().canBeArgument(type))
 	{
-		throw std::runtime_error("操作码类型与结果类型不匹配");
+		throw std::runtime_error("OpCode do not match result type");
 	}
 }
 
@@ -66,11 +66,11 @@ void ResultValue::validate() const
 {
 	if (src == nullptr)
 	{
-		throw std::runtime_error("源操作数是nullptr");
+		throw std::runtime_error("Src operand if nullptr");
 	}
 	if (!src->getType().canBeArgument(type))
 	{
-		throw std::runtime_error("数据源类型与结果类型不匹配");
+		throw std::runtime_error("Src data type do not match result data type");
 	}
 }
 
@@ -90,18 +90,18 @@ void PhiValue::validate() const
 		auto dependeny = incomingVector[i];
 		if (dependeny == nullptr)
 		{
-			throw std::runtime_error("源操作数是nullptr");
+			throw std::runtime_error("Src operand if nullptr");
 		}
 		if (auto var_dependeny = dynamic_cast<VariableValue*>(dependeny))
 		{
 			if (var_dependeny->getSection() != this->getSection())
 			{
-				throw std::runtime_error("合流值的入边所属的Section必须是和变量所属的Section一致");
+				throw std::runtime_error("Parent section of incoming value must be consistant with PHI value");
 			}
 		}
 		if (!dependeny->getType().canBeArgument(type))
 		{
-			throw std::runtime_error("源操作数与合流结果类型不匹配");
+			throw std::runtime_error("Src operand type do not match reuslt type");
 		}
 	}
 }

@@ -24,11 +24,11 @@ void SectionCall::validate() const
 {
 	if (caller == nullptr)
 	{
-		throw std::runtime_error("caller不能为nullptr");
+		throw std::runtime_error("`caller` cannot be nullptr");
 	}
 	if (callee == nullptr)
 	{
-		throw std::runtime_error("callee不能为nullptr");
+		throw std::runtime_error("`callee` cannot be nullptr");
 	}
 	for (auto value : argumentVector)
 	{
@@ -36,7 +36,7 @@ void SectionCall::validate() const
 		{
 			if (variableValue->getSection() != caller)
 			{
-				throw std::runtime_error("实参变量所属的Section必须是caller");
+				throw std::runtime_error("Arguments' parent section must be `caller`");
 			}
 		}
 	}
@@ -46,7 +46,7 @@ void SectionCall::validate() const
 		{
 			if (variableValue->getSection() != caller)
 			{
-				throw std::runtime_error("实参变量所属的Section必须是caller");
+				throw std::runtime_error("Arguments' parent section must be `caller`");
 			}
 		}
 	}
@@ -54,15 +54,15 @@ void SectionCall::validate() const
 	{
 		if (value->getSection() != caller)
 		{
-			throw std::runtime_error("结果值所属的Section必须是caller");
+			throw std::runtime_error("Result value's parent section must be `caller`");
 		}
 		if (value->getCall() != this)
 		{
-			throw std::runtime_error("结果值的所属调用必须是this");
+			throw std::runtime_error("Result value's parent SectionCall must be `this`");
 		}
 		if (value->getSrc()->getSection() != callee)
 		{
-			throw std::runtime_error("结果值的源操作数所属的Section必须是callee");
+			throw std::runtime_error("Result value's `callee` must be its parent section");
 		}
 	}
 }
@@ -135,11 +135,11 @@ void Section::validate() const
 	{
 		if (variableValue == nullptr)
 		{
-			throw std::runtime_error("value不能是nullptr");
+			throw std::runtime_error("`value` cannot be nullptr");
 		}
 		if (variableValue->getSection() != this)
 		{
-			throw std::runtime_error("图片段内变量所属的Section必须是this");
+			throw std::runtime_error("`value.section` of values in Graph Section must be `this`");
 		}
 		variableValue->validate();
 	}
@@ -147,11 +147,11 @@ void Section::validate() const
 	{
 		if (call == nullptr)
 		{
-			throw std::runtime_error("call不能是nullptr");
+			throw std::runtime_error("`call` cannot be nullptr");
 		}
 		if (call->getCaller() != this)
 		{
-			throw std::runtime_error("图片段内调用的caller必须是this");
+			throw std::runtime_error("`caller` of SecionCall in Graph Section must be `this`");
 		}
 		call->validate();
 	}

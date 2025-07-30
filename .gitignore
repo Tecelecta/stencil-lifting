@@ -1,5 +1,9 @@
 build/
 out/
+sdsl_out/
 .vs/
 .vscode/
 examples/tmp/
+.DS_Store
+*.mod
+*.bak

@@ -1,10 +1,10 @@
-﻿#include "SummaryIterativeSearcher.h"
+#include "SummaryIterativeSearcher.h"
 #include "LoopParallelizePass.h"
 #include "ArraySetSolver.h"
 
-#define VIZ(ID, V, LIST, SUM) \
+#define VIZ(ID, Vt, V, LIST, SUM) \
 {\
-std::cout << ID << ": " << V->getName() << " <- ";\
+std::cout << Vt << " " << ID << ": " << V->getName() << " <- ";\
 for (auto dep : LIST)\
 {\
 	std::cout << dep << " ";\
@@ -68,7 +68,7 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
                         }
                     }
 #ifdef _DEBUG
-                    VIZ(v, value, parallelizePass.getDependencyByVertex(v), parallelizePass.summaryVector[v])
+                    VIZ(v, "LoopInput", value, parallelizePass.getDependencyByVertex(v), parallelizePass.summaryVector[v])
 #endif
                     return true;
                 }
@@ -76,14 +76,15 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
             }
             else
             {
-                auto& dst = z3Pass.summaryVector[z3Pass.vertexId({ value, {} })];
+                auto body_vid = z3Pass.vertexId({ value, {} });
+                auto& dst = z3Pass.summaryVector[body_vid];
                 if (dst.form == Summary::Form::NONE)
                 {
                     auto v = parallelizePass.vertexId(loop->getSectionCall(0)->getArgument(value->getIndex()));
                     dst = parallelizePass.summaryVector[v];
 #ifdef _DEBUG
-                    std::cout << z3Pass.vertexId({ value, {} }) << ": " << value->getName() << std::endl;
-                    std::cout << dst.str() << std::endl;
+                    vertex_list loopIn({v});
+                    VIZ(body_vid, "BodyInput", value, loopIn, dst);
 #endif
                 }
                 return true;
@@ -97,6 +98,9 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
                 auto counter = (t_step * t + t_begin).simplify();
                 auto v = parallelizePass.vertexId(loop->getBound(0));
                 parallelizePass.summaryVector[v] = Summary::createScalar(0 <= t && t <= t_times - 1, counter, Summary::Form::INDEX);
+#ifdef _DEBUG
+                VIZ(v, "LoopBound", value, parallelizePass.getDependencyByVertex(v), parallelizePass.summaryVector[v])
+#endif
             }
             return true;
         };
@@ -105,11 +109,12 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
         {
             if (value->getSection() == loop)
             {
+                auto v = parallelizePass.vertexId(value);
                 auto v0 = parallelizePass.vertexId(value->getIncoming(0));
                 const auto& s0 = parallelizePass.summaryVector[v0];
                 auto v1 = parallelizePass.vertexId(value->getIncoming(1));
                 const auto& s1 = parallelizePass.summaryVector[v1];
-                auto& summary = parallelizePass.summaryVector[parallelizePass.vertexId(value)];
+                auto& summary = parallelizePass.summaryVector[v];
                 auto s2 = nextTimeStep(s1);
                 summary = s2.copyBase();
                 for (const auto& branch : s0.branches)
@@ -123,8 +128,7 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
                     summary.mergeBranch({ cond, branch.elem, 0, branch.index });
                 }
 #ifdef _DEBUG
-                std::cout << i << ": " << value->getName() << std::endl;
-                std::cout << summary.str() << std::endl;
+                VIZ(v, "LoopPhi", value, parallelizePass.getDependencyByVertex(v), summary)
 #endif
             }
             return true;
@@ -135,11 +139,15 @@ SummaryIterativeSearcher::SummaryIterativeSearcher()
             if (value->getSection() == loop)
             {
                 auto v = z3Pass.vertexId({ value->getSrc(), {} });
+                auto lv = parallelizePass.vertexId(value);
                 if (!z3Pass.update(vertex_list{ v }))
                 {
                     return false;
                 }
-                parallelizePass.summaryVector[parallelizePass.vertexId(value)] = z3Pass.summaryVector[v];
+                parallelizePass.summaryVector[lv] = z3Pass.summaryVector[v];
+#ifdef _DEBUG
+                VIZ(lv, "LoopResult", value, z3Pass.getDependencyByVertex(v), z3Pass.summaryVector[v])
+#endif
             }
             return true;
         };
@@ -168,10 +176,10 @@ void SummaryIterativeSearcher::runOnLoop()
     subPass.load({ loop });
     subPass.run();
     updateResultVector(subPass);
-
+    
     parallelizePass.load({ loop });
     parallelizePass.summaryVector = decltype(parallelizePass.summaryVector)(parallelizePass.getVertexNum(), Summary(z3ctx));
-
+    
     if (constantSpecializer[0] != nullptr)
     {
         t_begin = z3ctx.int_val(constantSpecializer[0].cast<Integer>().getData().str().c_str());
@@ -184,7 +192,7 @@ void SummaryIterativeSearcher::runOnLoop()
     {
         t_step = z3ctx.int_val(constantSpecializer[2].cast<Integer>().getData().str().c_str());
     }
-
+    
     if (iterateSCC(*this))
     {
         for (const auto& item : z3Pass.invalidValueMap)
@@ -200,6 +208,9 @@ void SummaryIterativeSearcher::runOnLoop()
     {
         std::cerr << "Find summary failed!" << std::endl;
     }
+#ifdef _DEBUG
+    std::cout << "=== Loop rewrite finished ===" << std::endl;
+#endif
 }
 
 bool SummaryIterativeSearcher::runOnTrivial(uint32_t i)
@@ -215,25 +226,43 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         {
             std::cout << "{" << v->getOperation().getName() << "(";
             for (auto operand : v->getDependencyVector()) {
-                std::cout << vertexId(operand) 
-                    << (operand == v->getDependencyVector().back() ? ")}" : ", ");
+                if (parallelizePass.vertexExists(operand))
+                {
+                    std::cout << "loop." << parallelizePass.vertexId(operand);
+                }
+                else if (z3Pass.vertexExists({operand, {}}))
+                {
+                    std::cout << "body." << z3Pass.vertexId({operand, {}});
+                }
+                std::cout << (operand == v->getDependencyVector().back() ? ")}" : ", ");
             }
         };
     valv.visitPhiValue = [this](PhiValue* v, nullptr_t) 
         { 
-            std::cout << "{Phi(" << vertexId(v->getIncoming(0)) << ", "
-                << vertexId(v->getIncoming(1)) << ")}";
+            std::cout << "{Phi(";
+            for (auto opd : v->getIncomingVector())
+            {
+                if (parallelizePass.vertexExists(opd))
+                {
+                    std::cout << "loop." << parallelizePass.vertexId(opd);
+                }
+                else if (z3Pass.vertexExists({opd, {}}))
+                {
+                    std::cout << "body." << z3Pass.vertexId({opd, {} });
+                }
+                std::cout << (opd == v->getIncomingVector().back() ? ")}" : ", ");
+            }
         };
     valv.visitInputValue = [this](InputValue* v, nullptr_t) 
         { 
             auto& calls = loop->getSectionCallVector();
             auto arg = calls[0]->getArgument(v->getIndex());
-            std::cout << "{Input(" << vertexId(arg) << ")}"; 
+            std::cout << "{Input(loop." << parallelizePass.vertexId(arg) << ")}"; 
         };
     valv.visitResultValue = [this] (ResultValue* v, nullptr_t) 
         { 
             if (vertexExists(v->getSrc()))
-                std::cout << "{Result(" << vertexId(v->getSrc()) << ")}";
+                std::cout << "{Result(body." << z3Pass.vertexId({v->getSrc(), {}}) << ")}";
             else {
                 std::cout << "{Result(";
                 std::cout << v->getSrc();
@@ -245,8 +274,15 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
     for (auto i : scc)
     {
         auto valptr = vertexVector[i];
-        std::cout << i << "@" << (dynamic_cast<VariableValue*>(valptr)->getSection() == loop ? "loop" : "body") 
-            << " : " << valptr->getName();
+        if (parallelizePass.vertexExists(valptr))
+        {
+            std::cout << "loop." << parallelizePass.vertexId(valptr);
+        }
+        else
+        {
+            std::cout << "body." << z3Pass.vertexId({valptr, {}});
+        }
+        std::cout << " : " << valptr->getName();
         std::cout << "(" << valptr->getType().toString() << ")";
         valv(valptr, nullptr);
         std::cout << std::endl;
@@ -300,17 +336,18 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         auto v = parallelizePass.vertexId(phiValueVector[index]->getIncoming(0));
         z3Pass.summaryVector[sccInputList[index]] = parallelizePass.summaryVector[v];
 #ifdef _DEBUG
-        std::cout << "SCC Input vid <- summary: " << sccInputList[index] 
-            << " - loop:"<< v << ": " << parallelizePass.summaryVector[v].str();
+        std::cout << "SCC Input: body." << sccInputList[index] 
+            << " <- loop."<< v << " :\n" << parallelizePass.summaryVector[v].str() << std::endl;
 #endif
     }
 #ifdef _DEBUG
     std::cout << "SCC input vertex ids: ";
     for (auto i : sccInputList) {
-        std::cout << i << " ";
+        std::cout << "body." << i << " ";
     }
+    std::cout << "\nSCC output vertex ids: ";
     for (auto i : sccOutputList) {
-        std::cout << i << " ";
+        std::cout << "body." << i << " ";
     }
     std::cout << std::endl;
 #endif
@@ -330,8 +367,9 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         ArraySetSolver solver(z3ctx, t_times,
             z3Pass.vertexAt(sccOutput).value->getType().getNumDims(), z3Pass.summaryVector[sccOutput]);
 
-        if (solver.tryBypassTiling())
-        { 
+//        if (solver.tryBypassTiling(t_times))
+         if (false)
+        {
 #ifdef _DEBUG
             std::cout << "Tiling detected\n";
 #endif // _DEBUG
@@ -342,8 +380,7 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
             solver.solve();
         }
 #ifdef _DEBUG
-		std::cout << sccOutput << ": " << z3Pass.vertexAt(sccOutput).value->getName() << std::endl;
-		std::cout << solver.summary.str() << std::endl;
+        VIZ(sccOutput, "ArrayWrite", z3Pass.vertexAt(sccOutput).value, z3Pass.getDependencyByVertex(sccOutput), solver.summary);
 #endif // _DEBUG
 		sccOutputSummary.emplace_back(std::move(solver.summary));
         scc_count++;
@@ -358,7 +395,7 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
 #endif
         for (size_t index = 0; index < phiValueVector.size(); index++)
         {
-            if (sccBypassList.find(index) != sccBypassList.end()) continue;
+            if (sccBypassList.find((int)index) != sccBypassList.end()) continue;
 
             auto v = sccInputList[index];
             auto ast = (Z3_ast)z3Pass.summaryVector[v].base;
@@ -483,7 +520,8 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         for (auto& branch : s2.branches)
         {
             auto w = getArrayBound(z3ctx, branch.index.size());
-            branch.cond = branch.cond.substitute(w, branch.createIndexVector()).simplify();
+            branch.cond = branch.cond.substitute(w, branch.createIndexVector());
+            branch.cond = branch.cond.simplify();
             branch.cond = simplifyUseTactic(branch.cond && 0 <= t && t <= t_times - 1);
             branch.elem = branch.elem.substitute(w, branch.createIndexVector()).simplify();
         }
@@ -495,8 +533,8 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         {
             std::cerr << "Verify failed!" << std::endl;
             std::cerr << "name = \n" << z3Pass.vertexAt(sccOutputList[index]).value->getName() << std::endl;
-            std::cerr << "pre = \n" << pre << std::endl;
-            std::cerr << "invar1 = \n" << invar1 << std::endl;
+            std::cerr << "pre = \n" << s0.str() << std::endl;
+            std::cerr << "invar2 = \n" << s2.str() << std::endl;
             //throw std::logic_error("Verify failed!");
             return false;
         }
@@ -715,11 +753,53 @@ bool SummaryIterativeSearcher::getReadSubstitute(z3::expr_vector& src, z3::expr_
     }
 }
 
+z3::expr SummaryIterativeSearcher::condNextTimeStep(z3::expr cond)
+{
+    assert(cond.is_bool());
+    
+    auto kind = cond.decl().decl_kind();
+    
+    switch (kind)
+    {
+    case Z3_OP_GE:
+    case Z3_OP_LE:
+        if ( has(cond, "t") )
+        {
+            Pattern mul_minus{
+                Z3_OP_MUL, {{Z3_OP_ANUM}, {Z3_OP_UNINTERPRETED}}
+            };
+            auto match = search(cond, mul_minus);
+            if (match.size() > 0 && has(match.back(), "t"))
+            {
+                return cond;
+            }
+            return cond.substitute(v_t, dst_t).simplify();
+        }
+    default:
+            break;
+    }
+    
+    z3::expr ret = cond;
+    for(auto arg : cond.args())
+    {
+        if (arg.is_bool())
+        {
+            z3::expr_vector src(z3ctx);
+            z3::expr_vector dst(z3ctx);
+            src.push_back(arg);
+            dst.push_back(condNextTimeStep(arg));
+            ret = ret.substitute(src, dst);
+        }
+    }
+    return ret;
+}
+
 Summary SummaryIterativeSearcher::nextTimeStep(const Summary& invar)
 {
     Summary result = invar;
     for (auto& branch : result.branches)
     {
+//        branch.cond = simplifyUseTactic(condNextTimeStep(branch.cond));
         branch.cond = simplifyUseTactic(branch.cond.substitute(v_t, dst_t));
         branch.elem = branch.elem.substitute(v_t, dst_t).simplify();
         for (size_t j = 0; j < branch.index.size(); j++)
@@ -748,14 +828,23 @@ Summary SummaryIterativeSearcher::propagateSkolemB(const Summary& invar)
     Summary result = invar;
     z3::expr_vector src_b(z3ctx);
     z3::expr_vector dst_sk(z3ctx);
+    z3::expr_vector tile_src_b(z3ctx);
+    z3::expr_vector tile_dst_sk(z3ctx);
     for (auto& branch : result.branches)
     {
         for (const auto& index : branch.index)
         {
             if (index.bound.has_value() && index.skolem_b.has_value())
             {
+                auto skolem_b = index.skolem_b.value();
+                if (has(skolem_b, "t"))
+                {
+                    tile_src_b.push_back(index.bound.value());
+                    tile_dst_sk.push_back(skolem_b.substitute(v_t, v_x));
+                }
                 src_b.push_back(index.bound.value());
-                dst_sk.push_back(index.skolem_b.value());
+                dst_sk.push_back(skolem_b);
+                
             }
         }
     }
@@ -769,13 +858,133 @@ Summary SummaryIterativeSearcher::propagateSkolemB(const Summary& invar)
         {
             branch.cond = simplifyUseTactic(branch.cond.substitute(src_b, dst_sk));
             branch.elem = branch.elem.substitute(src_b, dst_sk).simplify();
+
             for (uint32_t j = 0; j < branch.index.size(); j++)
             {
+                if ( !tile_src_b.empty() )
+                {
+                    branch.index[j].func = branch.index[j].func.substitute(tile_src_b, tile_dst_sk).simplify();
+                }
                 branch.index[j].func = branch.index[j].func.substitute(src_b, dst_sk).simplify();
             }
         }
     }
     return result;
+}
+
+
+static void extract_boundary(z3::expr cond, z3::expr_vector& lb, z3::expr_vector& ub, bool& has_or)
+{
+    assert(cond.is_bool());
+    auto kind = cond.decl().decl_kind();
+    if (kind == Z3_OP_GE &&
+        has(cond.arg(0), "t") &&
+        !has(cond.arg(0), "w_") )
+    {
+        lb.push_back(cond.arg(1));
+    }
+    else if (kind == Z3_OP_LE &&
+             has(cond.arg(0), "t") &&
+             !has(cond.arg(0), "w_") )
+    {
+        ub.push_back(cond.arg(1));
+    }
+    else if (kind == Z3_OP_EQ &&
+             has(cond.arg(0), "t") &&
+             !has(cond.arg(0), "w_") )
+    {
+        ub.push_back(cond.arg(1));
+        lb.push_back(cond.arg(1));
+    }
+    else if (kind == Z3_OP_NOT &&
+             has(cond, "t") &&
+             !has(cond, "w_") )
+    {
+        auto arg_k = cond.arg(0).decl().decl_kind();
+        if (arg_k == Z3_OP_GE)
+        {
+            ub.push_back((cond.arg(0).arg(1)-1).simplify());
+        }
+        else if (arg_k == Z3_OP_LE)
+        {
+            lb.push_back((cond.arg(0).arg(1)+1).simplify());
+        }
+        else if (arg_k == Z3_OP_EQ)
+        {
+            lb.push_back((cond.arg(0).arg(1)+1).simplify());
+            ub.push_back((cond.arg(0).arg(1)-1).simplify());
+        }
+    }
+    else
+    {
+        has_or = has_or || (kind == Z3_OP_OR);
+        for (auto arg: cond.args())
+        {
+            if (arg.is_bool()) extract_boundary(arg, lb, ub, has_or);
+        }
+    }
+}
+
+static bool check_tiled_cond(const z3::expr& cond)
+{
+    assert(cond.is_bool());
+    auto kind = cond.decl().decl_kind();
+    switch (kind)
+    {
+    case Z3_OP_GE:
+    case Z3_OP_LE: {
+        auto res = (has(cond.arg(0), "w_") && lookup_const_subexpr(cond.arg(0), "t"))
+                 || (has(cond.arg(1), "w_") && lookup_const_subexpr(cond.arg(1), "t"));
+        return res;
+    }
+    default: {
+            bool conj = false;
+            for (const auto& arg : cond.args())
+            {
+                if (arg.is_bool())
+                    conj = conj || check_tiled_cond(arg);
+            }
+            return conj;
+        }
+    }
+}
+
+z3::expr SummaryIterativeSearcher::mkInnerTileBound(z3::expr cond,
+                                                    const z3::expr& lb,
+                                                    const z3::expr& ub)
+{
+    assert(cond.is_bool());
+    
+    auto kind = cond.decl().decl_kind();
+    if (kind == Z3_OP_GE &&
+        has(cond.arg(0), "t") &&
+        has(cond.arg(0), "w_"))
+    {
+        z3::expr_vector dst_lb(z3ctx);
+        dst_lb.push_back(lb);
+        return cond.substitute(v_t, dst_lb);
+    }
+    else if (kind == Z3_OP_LE &&
+             has(cond.arg(0), "t") &&
+             has(cond.arg(0), "w_"))
+    {
+        z3::expr_vector dst_ub(z3ctx);
+        dst_ub.push_back(ub);
+        return cond.substitute(v_t, dst_ub);
+    }
+    z3::expr ret = cond;
+    for(auto arg : cond.args())
+    {
+        if (arg.is_bool())
+        {
+            z3::expr_vector src(z3ctx);
+            z3::expr_vector dst(z3ctx);
+            src.push_back(arg);
+            dst.push_back(mkInnerTileBound(arg, lb, ub));
+            ret = ret.substitute(src, dst);
+        }
+    }
+    return ret;
 }
 
 Summary SummaryIterativeSearcher::getPostCond(const Summary& invar)
@@ -791,14 +1000,84 @@ Summary SummaryIterativeSearcher::getPostCond(const Summary& invar)
     {
         z3::expr cond = branch.cond;
         z3::expr elem = branch.elem;
+        if (has(elem, "b_") || has(cond, "b_"))
+        {
+            printf("wtf??\n");
+            std::cout << invar.str() << std::endl;
+        }
         std::vector<Summary::WriteIndex> index = branch.index;
+        bool is_tiled = true;//check_tiled_cond(cond);
+        // if (is_tiled)
+        for (auto& ind : index)
+        {
+            if (has(ind.func, "x") && has(ind.func, "w_"))
+            {
+                z3::expr_vector src(z3ctx), dst(z3ctx);
+                pealMulDivConst(ind.func, src, dst);
+                if (src.size()>0)
+                {
+                    ind.func = ind.func.substitute(src, dst).simplify();
+                    // TODO: 无效替换，因为cond、elem里面没有x
+                    cond = cond.substitute(src, dst).simplify();
+                    elem = elem.substitute(src, dst).simplify();
+                }
+            }
+            is_tiled = is_tiled && !has(ind.func, "x");
+        }
+        if (is_tiled)
+        {
+            z3::expr_vector ub(z3ctx), lb(z3ctx);
+            bool has_or = false;
+            extract_boundary(cond, lb, ub, has_or);
+            auto tiling_cond = z3ctx.bool_val(false);
+            if (has_or) for (int i=0; i<lb.size(); i++)
+            {
+                for (int j=0; j<ub.size(); j++)
+                {
+                    auto lower = lb[i];
+                    auto upper = ub[j];
+                    if (proveTrue(ub[j] > lb[i]))
+                        tiling_cond = tiling_cond || mkInnerTileBound(cond, lower, upper);
+                }
+            }
+            else
+            {
+                assert(lb.size() == ub.size());
+                for (int i=0; i<lb.size(); i++)
+                {
+                    auto lower = lb[i];
+                    auto upper = ub[i];
+                    tiling_cond = tiling_cond || mkInnerTileBound(cond, lower, upper);
+                }
+            }
+
+//            if (!proveEquals(tiling_cond, cond))
+            {
+                dst_times.pop_back();
+                dst_times.push_back(ub.back());
+                cond = simplifyUseTactic(tiling_cond.substitute(v_t, dst_times));
+            }
+        }
         cond = simplifyUseTactic(cond.substitute(v_t, dst_times));
         elem = elem.substitute(v_t, dst_times).simplify();
+        
         z3::expr_vector dst_sk(z3ctx);
         dst_sk.push_back(branch.skolem_x.value());
+        
         for (uint32_t j = 0; j < index.size(); j++)
         {
             index[j].func = index[j].func.substitute(v_x, dst_sk).simplify();
+            if (index[j].restore_w.has_value())
+            {
+                const auto& rw = index[j].restore_w.value();
+                auto w = getArrayBound(z3ctx, index.size());
+                z3::expr_vector src_skw(z3ctx), dst_skw(z3ctx);
+                dst_skw.push_back(rw);
+                src_skw.push_back(w[j]);
+                index[j].func = index[j].func.substitute(src_skw, dst_skw).simplify();
+                elem = elem.substitute(src_skw, dst_skw).simplify();
+                cond = cond.substitute(src_skw, dst_skw).simplify();
+            }
         }
         result.mergeBranch({ cond, elem, branch.layer, index });
     }

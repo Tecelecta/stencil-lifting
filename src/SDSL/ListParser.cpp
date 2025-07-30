@@ -15,7 +15,7 @@ LBRACKET: {
 		nextToken();
 		goto RBRACKET;
 	default:
-		RECURSE(RightValueExpressionParser, "在分析数组下标时发现语法错误");
+		RECURSE(RightValueExpressionParser, "In array subscription expr: syntax error");
 		goto RBRACKET;
 	}
 }
@@ -68,7 +68,7 @@ CONTENT: {
 		nextToken();
 		goto SUCCESS_FUNC;
 	default:
-		RECURSE(RightValueExpressionParser, "在分析参数列表表达式时发现语法错误");
+		RECURSE(RightValueExpressionParser, "In parameter list expr: syntax error");
 		goto COMMA;
 	}
 }

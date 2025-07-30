@@ -65,18 +65,18 @@ std::unique_ptr<AST> CompileUnitParser::run(std::queue<Token>& tokenStream)
 			nextToken();
 			break;
 		case Token::Category::FUNC:
-			RECURSE(FunctionDefinitionParser, "在分析函数定义时发现语法错误");
+			RECURSE(FunctionDefinitionParser, "In function defination: syntax error");
 			break;
 		case Token::Category::CONST:
-			RECURSE(VariableDefinitionParser, "在分析全局常量定义时发现语法错误");
+			RECURSE(VariableDefinitionParser, "In global constant defination: syntax error");
 			break;
 		case Token::Category::STRUCT:
-			RECURSE(StructDefinitionParser, "在分析结构体定义时发现语法错误");
+			RECURSE(StructDefinitionParser, "In structure defination: syntax error");
 			break;
 		case Token::Category::VAR:
-			ERROR("不能定义全局变量")
+			ERROR("Global variable defination is not allowed")
 		default:
-			ERROR("意料之外的符号")
+			ERROR("Unexpected token")
 		}
 	}
 }
