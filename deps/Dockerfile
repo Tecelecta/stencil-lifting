@@ -33,7 +33,7 @@ RUN mv Halide-19.0.0 Halide
 
 WORKDIR /apps/cmake
 
-RUN ./bootstrap -- -DCMAKE_USE_OPENSSL=OFF && make -j4 && make install
+RUN ./bootstrap -- -DCMAKE_USE_OPENSSL=OFF && make -j8 && make install
 
 RUN make clean
 
@@ -56,7 +56,7 @@ RUN cmake -S llvm -B build \
         -DLLVM_ENABLE_ZSTD=OFF \
         -DLLVM_BUILD_32_BITS=OFF
 
-RUN cmake --build build -j4 && \
+RUN cmake --build build -j8 && \
     cmake --install build --prefix $(pwd)/distrib 
 
 RUN cmake --build build -t clean
@@ -64,7 +64,7 @@ RUN cmake --build build -t clean
 WORKDIR /apps/z3
 
 RUN cmake -S . -B build && \
-    cmake --build build -j4 && \
+    cmake --build build -j8 && \
     cmake --install build --prefix $(pwd)/distrib 
 
 RUN cmake --build build -t clean
@@ -80,7 +80,7 @@ WORKDIR /apps/Halide
 RUN cmake -S . -B build \
           -DCMAKE_BUILD_TYPE=Release \
           -DHalide_LLVM_ROOT=/apps/llvm-project/distrib && \
-    cmake --build build -j4 && \
+    cmake --build build -j8 && \
     cmake --install build --prefix $(pwd)/distrib
 
 RUN cmake --build build -t clean
@@ -90,11 +90,12 @@ WORKDIR /apps/stencil-lifting
 RUN cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release \
                -DZ3_DIR=/apps/z3/distrib/lib/cmake/z3 \
                -DBoost_DIR=/apps/boost/distrib/lib/cmake && \
-    cmake --build build/release
+    cmake --build build/release -j8
     
 
 RUN pip3 install -r ./deps/requirements.txt
 
 ENV HALIDE_DISTRIB_PATH=/apps/Halide/distrib
 ENV LD_LIBRARY_PATH=${HALIDE_DISTRIB_PATH}/lib
+ENV FORT=/apps/llvm-project/distrib/bin/flang-new
 

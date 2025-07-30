@@ -9,9 +9,9 @@ SRC = $(wildcard *_halide.cpp)
 OBJS = $(SRC:_halide.cpp=.drv.o) $(SRC:_halide.cpp=.fort.o)
 TARGET = $(SRC:_halide.cpp=.halide)
 
-CXX = g++
-# TODO: change to flang
-FORT = gfortran
+CXX ?= g++
+FORT ?= gfortran
+FFLAGS = -O0
 
 ifeq ($(SCALE), down)
 CFLAGS = -D_3D_1=256 -D_3D_2=256 -D_3D_3=256 \
@@ -21,10 +21,15 @@ endif
 
 ifeq ($(MODE), debug)
 CFLAGS += -g -O0
+FFLAGS += -g
 else
 CFLAGS += -O3
 endif
 
+LDFLAGS = -ldl -lpthread -L $(HALIDE_DISTRIB_PATH)/lib -lHalide
+ifeq ($(FORT), gfortran)
+LDFLAGS += -lgfortran
+endif
 
 .SECONDARY: $(addprefix $(OBJ)/, $(OBJS))
 
@@ -32,20 +37,18 @@ build: $(addprefix $(BIN)/, $(TARGET))
 
 $(OBJ)/%.fort.o: $(FORT_DIR)/%.f90
 	@mkdir -p $(@D)
-	$(FORT) $(CFLAGS) $< -c -o $@ 
+	$(FORT) $(FFLAGS) $< -c -o $@ 
 
 $(OBJ)/%.fort.o: $(FORT_DIR)/%.f
 	@mkdir -p $(@D)
-	$(FORT) $(CFLAGS) $< -c -o $@ 
+	$(FORT) $(FFLAGS) $< -c -o $@ 
 
 $(OBJ)/%.drv.o: %_halide.cpp
 	$(CXX) $(CFLAGS) -std=c++17 -I $(HALIDE_DISTRIB_PATH)/include $< -c -o $@
 
 $(BIN)/%.halide: $(OBJ)/%.fort.o $(OBJ)/%.drv.o
 	@mkdir -p $(@D)
-	$(CXX) $^ -o $@ -ldl -lpthread -L $(HALIDE_DISTRIB_PATH)/lib -lHalide \
-	-L /opt/homebrew/Cellar/gcc/15.1.0/lib/gcc/current/ \
-	-lgfortran
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 clean:
-	rm -rf $(BIN) $(OBJ)
+	rm -f $(addprefix $(OBJ)/, $(OBJS)) $(addprefix $(BIN)/, $(TARGET))
