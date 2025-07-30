@@ -1,4 +1,4 @@
-SUBROUTINE accelerate_kernel_loop83(pressure,stepbymass,x_max,x_min,xarea,xvel0,xvel1,y_max,y_min)
+SUBROUTINE accelerate_kernel_loop83(pressure,stepbymass,xarea,xvel0,xvel1,x_max,x_min,y_max,y_min)
 INTEGER :: j
 INTEGER :: k
 INTEGER :: x_max
