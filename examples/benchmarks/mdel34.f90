@@ -62,7 +62,7 @@ SUBROUTINE nonlocal_flux (nlflux, hfxpbl, deltaoh, zfacmf, &
     REAL(kind=8) :: delxy, mlfrac, ezfrac, sfcfracn, sflux0, snlflux0, amf1, amf2, &
                     bmf2, amf3, bmf3, pth1
 
-!赋值结束，下面是kernel
+!kernel
     DO j = jts, jte
     DO i = its, ite
 

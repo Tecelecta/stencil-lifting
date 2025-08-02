@@ -110,7 +110,7 @@ vertex_list packReachableSubGraph(const adjacency_list& G, const vertex_list& V)
 	return result;
 }
 
-/// 此算法可以同时求出强连通分量和拓扑序
+/// 
 class Kosaraju
 {
 public:
@@ -214,7 +214,7 @@ bool isTrivialSCC(const vertex_list& scc, const adjacency_list& G)
 		auto v = scc.front();
 		if (std::find(G[v].begin(), G[v].end(), v) == G[v].end())
 		{
-			// 平凡强连通分量：只有一个顶点并且不含自环
+			// 
 			return true;
 		}
 	}

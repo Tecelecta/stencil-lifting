@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-// SDSL: Stencil Domain Specific Language（模板计算领域特定语言）
+// SDSL: Stencil Domain Specific Language
 
 #ifdef _WIN32
 

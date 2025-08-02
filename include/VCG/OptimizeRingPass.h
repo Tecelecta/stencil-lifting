@@ -5,22 +5,22 @@
 typedef std::vector<std::pair<GroupNormalForm, Integer>> RingNormalForm;
 
 /**
-	* @brief 代数系统：环
+	* @brief 
 	* @details
-	* 定义该代数系统上运算满足结合律，可选满足交换律，可选具有单位元和逆元。
+	* 
 	*/
 struct RingAlgebraSystem
 {
-	Type elemType; //!< 定义代数系统的元素类型
-	Operation addOp; //!< 定义代数系统的“加法”运算
-	Operation subOp; //!< 定义代数系统的“减法”运算
-	Operation negOp; //!< 定义代数系统的“相反数”运算
-	Operation mulOp; //!< 定义代数系统的“乘法”运算
-	Operation scaOp; //!< 定义代数系统的“数乘”运算
-	Operation powOp; //!< 定义代数系统的“整数次幂”运算
-	ConstantValue* zero = nullptr; //!< 定义代数系统的“0”
-	ConstantValue* one = nullptr; //!< 定义代数系统的“1”
-	bool isCommutative = false; //!< 是否交换环
+	Type elemType; //!< 
+	Operation addOp; //!< 
+	Operation subOp; //!< 
+	Operation negOp; //!< 
+	Operation mulOp; //!< 
+	Operation scaOp; //!< 
+	Operation powOp; //!< 
+	ConstantValue* zero = nullptr; //!< 0
+	ConstantValue* one = nullptr; //!< 1
+	bool isCommutative = false; //!< 
 };
 
 class AnalyzeRingPass : virtual public Pass<GraphOuterSection>, public RingAlgebraSystem,
@@ -43,7 +43,7 @@ public:
 	std::vector<RingNormalForm> ringNormalForms;
 };
 
-/// 提取标准化的环代数运算（浅层次）
+/// 
 class ExtractRingShallowPass : public CopySectionShallowPass, public AnalyzeRingPass
 {
 public:
@@ -60,7 +60,7 @@ private:
 		OperationValue::Builder& builder, Operation powOp, Operation mulOp, Operation negOp, Operation scaOp);
 };
 
-/// 提取标准化的环代数运算（深层次）
+/// 
 class ExtractRingDeepPass : public CopySectionDeepPass, public RingAlgebraSystem
 {
 protected:

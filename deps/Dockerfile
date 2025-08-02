@@ -1,8 +1,9 @@
-FROM nvcr.io/nvidia/cuda:12.1.0-devel-ubuntu22.04
+# FROM nvcr.io/nvidia/cuda:12.1.0-devel-ubuntu22.04
+FROM nvcr.m.daocloud.io/nvidia/cuda:12.1.0-devel-ubuntu22.04
 
 #  === dev usage ===
-ENV HTTPS_PROXY=http://10.18.86.214:7892
-ENV HTTP_PROXY=http://10.18.86.214:7892
+# ENV HTTPS_PROXY=http://10.18.86.214:7892
+# ENV HTTP_PROXY=http://10.18.86.214:7892
 
 RUN { \
 echo "deb https://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse"; \

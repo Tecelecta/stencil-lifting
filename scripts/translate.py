@@ -174,7 +174,7 @@ class TranslateContext:
 
     def translate_Declaration_Type_Spec(self, ast):
         assert isinstance(ast, Declaration_Type_Spec)
-        return str(ast.children[1])  # Fortran要使用type关键字，DSL直接使用名字即可
+        return str(ast.children[1])  # FortrantypeDSL
 
     def translate_Entity_Decl(self, ast, type_name, array_dims, intent_out):
         assert isinstance(ast, Entity_Decl)
@@ -192,7 +192,7 @@ class TranslateContext:
     def translate_Explicit_Shape_Spec(self, ast):
         assert isinstance(ast, Explicit_Shape_Spec)
         assert ast.children[1]
-        lower_bound = str(ast.children[0]) if ast.children[0] else "1"  # 注意不是从0开始！
+        lower_bound = str(ast.children[0]) if ast.children[0] else "1"  # 0
         upper_bound = str(ast.children[1])
         return [lower_bound, upper_bound]
 
@@ -317,11 +317,11 @@ class TranslateContext:
 
     def translate_Call_Stmt(self, ast):
         assert isinstance(ast, Call_Stmt)
-        return ["// " + str(ast)]  # 忽略调用语句
+        return ["// " + str(ast)]  # 
 
     def translate_Write_Stmt(self, ast, *args):
         assert isinstance(ast, Write_Stmt)
-        return ["// " + str(ast)]  # 忽略输出语句
+        return ["// " + str(ast)]  # 
 
     # ------------------------------------------------------------
     # expression
@@ -341,7 +341,7 @@ class TranslateContext:
             return "%s[%s]" % (base, ", ".join(index))
         if not is_left_value:
             return "%s(%s)" % (base, ", ".join(index))
-        # 匿名函数
+        # 
         return sdsl.FuncDecl(base, self.is_local, index, "lambda")
 
     def translate_Parenthesis(self, ast, is_left_value):
@@ -393,7 +393,7 @@ class TranslateContext:
         value = str(ast.children[0])
         index = value.find('D')
         if index > 0:
-            value = value[:index]  # 去掉那些奇怪的后缀
+            value = value[:index]  # 
         return str(float(value))
 
     def translate_Logical_Literal_Constant(self, ast, *args):

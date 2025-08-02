@@ -2,7 +2,7 @@
 
 /**
  * @file Context.h
- * @brief 定义符号计算和内存管理的上下文
+ * @brief 
  */
 #define VCG_EXPORTS
 
@@ -18,19 +18,19 @@ public:
     VCG_API ~Context();
     DISABLE_COPY_MOVE(Context)
 
-    /// 获取常量字面量
+    /// 
     VCG_API ConstantValue* createConstantValue(Type type, Symbol value, String name = String());
 
-    /// 获取无效值
+    /// 
     VCG_API InvalidValue* createInvalidValue(Type type, String name = String());
 
-    /// 获取值为true的常量值
+    /// true
     ConstantValue* getTrueValue() const { return trueValue; }
 
-    /// 获取值为false的常量值
+    /// false
     ConstantValue* getFalseValue() const { return falseValue; }
 
-    /// 获取值为整型0的常量值
+    /// 0
     ConstantValue* getZeroValue() const { return zeroValue; }
 
 private:

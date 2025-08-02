@@ -37,7 +37,7 @@ struct SymbolLayerAndMeaning
 	SymbolMeaning meaning;
 };
 
-/// 符号表
+/// 
 class SymbolTable final
 {
 public:

@@ -345,7 +345,7 @@ static void createArrayGetSummary(Summary& result, size_t layer, const std::vect
 	auto n = srcVector.size() - 1;
 	if (readIndex.size() < n)
 	{
-		// 第一阶段：根据下标的前置条件，排除不会运行到的分支
+		// 
 		const auto& src = srcVector[readIndex.size() + 1];
 		assert(src.form == Summary::Form::INDEX);
 		for (const auto& branch : src.branches)
@@ -361,14 +361,14 @@ static void createArrayGetSummary(Summary& result, size_t layer, const std::vect
 	}
 	else
 	{
-		// 第二阶段：根据数组的每个写分支，确定读到的元素
+		// 
 		auto read_index = createZ3Vector(z3ctx, readIndex);
 		const auto& arr = srcVector.front();
 		assert(arr.form == Summary::Form::ARRAY);
 		z3::expr no_write_cond = cond;
 		for (const auto& branch : arr.branches)
 		{
-			// 处理写过的下标
+			// 
 			no_write_cond = no_write_cond && !branch.cond;
 			auto read_cond = simplifyUseTactic((cond && branch.cond).substitute(arrayBound, read_index));
 			if (!read_cond.is_false())
@@ -378,7 +378,7 @@ static void createArrayGetSummary(Summary& result, size_t layer, const std::vect
 				result.mergeBranch({ read_cond, read_elem });
 			}
 		}
-		// 处理没写过的下标
+		// 
 		no_write_cond = simplifyUseTactic(no_write_cond.substitute(arrayBound, read_index));
 		if (!no_write_cond.is_false())
 		{
@@ -404,7 +404,7 @@ static void createArraySetSummary(Summary& result, size_t layer, const std::vect
 	auto n = srcVector.size() - 2;
 	if (writeIndex.size() < n)
 	{
-		// 第一阶段：根据下标的前置条件，排除不会运行到的分支
+		// 
 		const auto& src = srcVector[writeIndex.size() + 1];
 		assert(src.form == Summary::Form::INDEX);
 		for (const auto& branch : src.branches)
@@ -420,7 +420,7 @@ static void createArraySetSummary(Summary& result, size_t layer, const std::vect
 	}
 	else
 	{
-		// 第二阶段：根据被写元素的前置条件，确定被写的分支
+		// 
 		const auto& src = srcVector.back();
 		assert(src.form != Summary::Form::ARRAY);
 		for (const auto& branch : src.branches)
@@ -446,7 +446,7 @@ Summary createArraySetSummary(size_t layer, const std::vector<Summary>& srcVecto
 	auto result = srcVector.front().copyBase();
 	createArraySetSummary(result, layer, srcVector, arrayBound, z3ctx.bool_val(true), writeIndex);
 
-	// 第三阶段：将原数组的每个未被复写的分支添加进来
+	// 
 	z3::expr override_cond = z3ctx.bool_val(false);
 	for (const auto& branch : result.branches)
 	{

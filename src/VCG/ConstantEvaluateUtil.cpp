@@ -24,7 +24,7 @@ size_t ConstantEvaluateUtil::getSelectedOperand(ConstantValue* selector)
 	{
 		return selector->getValue<Logic>().isTrue() ? 1 : 2;
 	}
-	assert(false); // 使用整型选择未支持
+	assert(false); // 
 	if (selector->getType().getName().equals("Integer"))
 	{
 		return selector->getValue<Integer>().getData().convert_to<size_t>() + 1;
@@ -76,8 +76,8 @@ ConstantEvaluateUtil::ConstantEvaluateUtil()
 
 	evaluate["select"] = [](Operation op, const std::vector<ConstantValue*>& src, String name) -> ConstantValue*
 		{
-			// 注：select算子需要特殊处理，只要选择子是常量即可
-			// 此函数为了兼容已知操作数是常量的情况
+			// select
+			// 
 			return src[getSelectedOperand(src[0])];
 		};
 

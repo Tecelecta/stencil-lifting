@@ -63,7 +63,7 @@ std::unique_ptr<AST> ArgumentListExpressionParser::run(std::queue<Token>& tokenS
 CONTENT: {
 	switch (readToken().category)
 	{
-	case Token::Category::RPAREN: // 未初始化
+	case Token::Category::RPAREN: // 
 		astLeafCreate();
 		nextToken();
 		goto SUCCESS_FUNC;

@@ -213,7 +213,7 @@ LPAREN:  { // START
 }
 
 LPAREN_ID: {
-	// 这是一个判断是否进入规约态的过渡状态，不压栈！
+	// 
 	if (readToken().category == Token::Category::RPAREN)
 	{
 		astLeafCreate();
@@ -227,7 +227,7 @@ LPAREN_ID: {
 }
 
 LPAREN_ID_RPAREN: {
-	// 这是一个进行规约然后弹栈的状态，不压栈！
+	// 
 	astNodeReduce(AST::Category::PRIMARY_EXPRESSION, 3);
 	stateStack.resize(stateStack.size() - 1);
 	switch (stateStack.back())

@@ -7,9 +7,9 @@
 #include <unordered_set>
 
 /**
-* @brief 用于支持基于垃圾收集的内存管理机制的管理类
+* @brief 
 * @details
-* 是上下文组成部分，管理该上下文内的所有需要垃圾回收机制的对象。
+* 
 * @see MarkedObject
 * @see Context
 */
@@ -20,10 +20,10 @@ protected:
 	DISABLE_COPY_MOVE(GarbageCollector)
 
 public:
-	/// 清空对象池，删除所有对象
+	/// 
 	VCG_API void deleteAll();
 
-	/// 运行“标记-删除”算法，删除未被引用的对象
+	/// -
 	VCG_API void deleteUseless();
 
 private:
@@ -32,12 +32,12 @@ private:
 	void markObject(MarkedObject* object);
 
 protected:
-	std::unordered_set<MarkedObject*> rootUsefulSet; /// 需要保留的根对象，该集合内的对象和它们的引用不被删除
+	std::unordered_set<MarkedObject*> rootUsefulSet; /// 
 
 private:
 	Context* context;
-	std::vector<MarkedObject*> objectPool; //!< 保存所有对象
-	std::queue<MarkedObject*> toSearch; //!< 广度优先搜索用的队列
+	std::vector<MarkedObject*> objectPool; //!< 
+	std::queue<MarkedObject*> toSearch; //!< 
 	friend MarkedObject;
 	friend MarkedObjectGuard;
 };

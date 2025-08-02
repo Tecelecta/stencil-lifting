@@ -2,34 +2,34 @@
 
 /**
  * @file Operation.h
- * @brief 定义操作码的数据结构
+ * @brief 
  */
 
 #include "Type.h"
 
 /**
-	* @brief VCG中的操作码，用于支持同名操作的重载
+	* @brief VCG
 	* @details
-	* 每个操作码由名称、参数类型和返回值类型组成，在内存中使用 Operation::Impl 类表示，然后使用该类的作为接口。
+	*  Operation::Impl 
 	*/
 class Operation : public Symbol
 {
 public:
-	/// DSL源码按名称和参数重载
+	/// DSL
 	struct Overload
 	{
-		String name; //!< 操作名称
-		std::vector<Type> parameterTypes; //!< 参数类型
+		String name; //!< 
+		std::vector<Type> parameterTypes; //!< 
 
 		DECL_HASH_EQ_NE_API(Overload)
 	};
 
-	/// 名称和参数，再加上返回值，构成操作码在IR中的重载
+	/// IR
 	struct Data
 	{
-		String name; //!< 操作名称
-		std::vector<Type> parameterTypes; //!< 参数类型
-		Type returnType; //!< 返回值类型
+		String name; //!< 
+		std::vector<Type> parameterTypes; //!< 
+		Type returnType; //!< 
 
 		DECL_HASH_EQ_NE_API(Data)
 	};
@@ -54,19 +54,19 @@ protected:
 public:
 	Operation(Impl* impl_ptr = nullptr) : Symbol(impl_ptr) {}
 
-	/// 获取操作名称
+	/// 
 	String getName() const { return getImpl().name; }
 
-	/// 获取所有参数类型
+	/// 
 	const std::vector<Type>& getParameterTypeVector() const { return getImpl().parameterTypes; }
 
-	/// 根据索引获取某一个参数类型
+	/// 
 	Type getParameterType(size_t i) const { return getImpl().parameterTypes[i]; }
 
-	/// 获取参数数量
+	/// 
 	size_t getParameterNum() const { return getImpl().parameterTypes.size(); }
 
-	/// 获取返回值类型
+	/// 
 	Type getReturnType() const { return getImpl().returnType; }
 
 public:
@@ -94,71 +94,71 @@ protected:
 
 public:
 	/**
-		* @brief 根据数据获取操作码对象
-		* @param data 操作的完整声明数据
+		* @brief 
+		* @param data 
 		*/
 	VCG_API Operation getOperation(Operation::Data data);
 
 	/**
-		* @brief 根据数据获取操作码对象
-		* @param name_and_parameterTypes 操作名称和参数类型
-		* @param returnType 返回值类型
+		* @brief 
+		* @param name_and_parameterTypes 
+		* @param returnType 
 		*/
 	VCG_API Operation getOperation(Operation::Overload name_and_parameterTypes, Type returnType);
 
 	/**
-		* @brief 根据数据获取操作码对象
-		* @param name 操作名称
-		* @param parameterTypes 参数类型
-		* @param returnType 返回值类型
+		* @brief 
+		* @param name 
+		* @param parameterTypes 
+		* @param returnType 
 		*/
 	VCG_API Operation getOperation(String name, const std::vector<Type>& parameterTypes, Type returnType);
 		
 	/**
-		* @brief 获取表示拷贝的操作码对象
-		* @param type 操作数类型
+		* @brief 
+		* @param type 
 		*/
 	VCG_API Operation getCopyOperation(Type type);
 		
 	/**
-		* @brief 获取表示二元条件选择的操作码对象
-		* @param type 操作数类型
+		* @brief 
+		* @param type 
 		*/
 	VCG_API Operation getBinarySelectOperation(Type type);
 		
 	/**
-		* @brief 获取数组读操作的操作码对象
-		* @param arrayType 数组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getArrayGetOperation(ArrayType arrayType);
 
 	/**
-		* @brief 获取数组写操作的操作码对象
-		* @param arrayType 数组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getArraySetOperation(ArrayType arrayType);
 
 	/**
-		* @brief 获取数组下界的操作码对象
-		* @param arrayType 数组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getArrayLowerBoundOperation(ArrayType arrayType);
 		
 	/**
-		* @brief 获取数组上界的操作码对象
-		* @param arrayType 数组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getArrayUpperBoundOperation(ArrayType arrayType);
 		
 	/**
-		* @brief 获取元组读操作的操作码对象
-		* @param arrayType 元组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getTupleGetOperation(TupleType tupleType, size_t index);
 		
 	/**
-		* @brief 获取元组写操作的操作码对象
-		* @param arrayType 元组类型
+		* @brief 
+		* @param arrayType 
 		*/
 	VCG_API Operation getTupleSetOperation(TupleType tupleType, size_t index);
 

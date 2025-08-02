@@ -19,14 +19,14 @@ private:
 	bool runOnTypical(const vertex_list& scc) override;
 };
 
-/// 复制传播优化（浅层次）
+/// 
 class CopyPropagationShallowPass : public CopySectionShallowPass, protected AnalyzeCopyValuePass
 {
 public:
 	VCG_API GraphOuterSection run(GraphOuterSection src) override;
 };
 
-/// 复制传播优化（深层次）
+/// 
 class CopyPropagationDeepPass : public CopySectionDeepPass
 {
 protected:

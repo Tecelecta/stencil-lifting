@@ -337,7 +337,7 @@ BinaryBranch* BinaryBranch::Builder::createInstance(Context* context)
 	setTemplateVectorSize(1);
 	setSectionCallVectorSize(2);
 
-	// 设置条件操作数形参
+	// 
 	InputValue::Builder builder;
 	builder.createInstance(context);
 	builder.setType(context->getLogicType());
@@ -375,25 +375,25 @@ IterateLoop* IterateLoop::Builder::createInstance(Context* context)
 	InputValue::Builder inputBuilder;
 	auto integer_type = context->getIntegerType();
 
-	// 设置循环计数器开始下标形参
+	// 
 	inputBuilder.createInstance(context);
 	inputBuilder.setType(integer_type);
 	inputBuilder.setName(context->getString("begin"));
 	setTemplate(0, inputBuilder);
 
-	// 设置循环迭代次数形参
+	// 
 	inputBuilder.createInstance(context);
 	inputBuilder.setType(integer_type);
 	inputBuilder.setName(context->getString("times"));
 	setTemplate(1, inputBuilder);
 
-	// 设置循环计数器步长形参
+	// 
 	inputBuilder.createInstance(context);
 	inputBuilder.setType(integer_type);
 	inputBuilder.setName(context->getString("step"));
 	setTemplate(2, inputBuilder);
 
-	// 设置循环计数器约束变元
+	// 
 	BoundValue::Builder boundBuilder;
 	boundBuilder.createInstance(context);
 	boundBuilder.setType(integer_type);
@@ -431,7 +431,7 @@ ParallelLoop* ParallelLoop::Builder::createInstance(Context* context, size_t cou
 	auto integer_type = context->getIntegerType();
 	for (size_t i = 0; i < counterNum; i++)
 	{
-		// 设置约束变元
+		// 
 		boundBuilder.createInstance(context);
 		boundBuilder.setType(integer_type);
 		boundBuilder.setName(context->getString("counter_" + std::to_string(i)));

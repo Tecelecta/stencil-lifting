@@ -58,7 +58,7 @@ ASG: {
 		astLeafCreate();
 		nextToken();
 		goto RIGHT;
-	case Token::Category::COMMA: // 支持多变量赋值
+	case Token::Category::COMMA: // 
 		astLeafCreate();
 		nextToken();
 		goto LEFT;
@@ -108,7 +108,7 @@ IF_BODY: {
 		if (readToken().category == Token::Category::IF)
 		{
 			RECURSE(IfStatementParser, "In IF statement: syntax error");
-			goto SUCCESS; // 可以少一个end if
+			goto SUCCESS; // end if
 		}
 		goto ELSE_BODY;
 	default:

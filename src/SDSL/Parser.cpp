@@ -15,7 +15,7 @@ void Parser::nextToken()
 	tokenStreamPtr->pop();
 }
 
-// 将当前的token转换为AST节点，压入astStack
+// tokenASTastStack
 void Parser::astLeafCreate()
 {
 	auto ast = std::make_unique<AST>();
@@ -23,13 +23,13 @@ void Parser::astLeafCreate()
 	astStack.push_back(std::move(ast));
 }
 
-// 将astStack中全部的节点合并成category类型的父节点，压入astStack
+// astStackcategoryastStack
 void Parser::astNodeReduce(AST::Category category)
 {
 	astNodeReduce(category, astStack.size());
 }
 
-// 将astStack中num个AST的节点合并成category类型的父节点，压入astStack
+// astStacknumASTcategoryastStack
 void Parser::astNodeReduce(AST::Category category, size_t num)
 {
 	assert(num <= astStack.size());

@@ -33,7 +33,7 @@ bool Graph::iterateSCC(SccAction& action) const
 		assert(!scc.empty());
 		if (isTrivialSCC(scc, dependencyVector))
 		{
-			// 平凡强连通分量：只有一个顶点并且不含自环
+			// 
 			if (!action.runOnTrivial(scc.front()))
 			{
 				return false;
@@ -100,7 +100,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 	collectSection();
 	collectVariable();
 
-	// 收集顶点依赖信息
+	// 
 	operandsVector.resize(vertexVector.size());
 	dependencyVector.resize(vertexVector.size());
 	auto varNum = (uint32_t)vertexVector.size();
@@ -115,7 +115,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 			}
 			else
 			{
-				// 如果被调用的图片段未展开，则结果值认为依赖调用前传入的实参
+				// 
 				for (auto value : call->getArgumentVector())
 				{
 					addEdge(i, value, true);
@@ -128,7 +128,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 		}
 		else
 		{
-			// 普通变量依赖源操作数
+			// 
 			auto dependencies = vertexVector[i]->getDependencyVector();
 			for (auto dependency : dependencies)
 			{
@@ -140,7 +140,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 	{
 		for (auto call : caller->getSectionCallVector())
 		{
-			// 形参依赖实参
+			// 
 			auto callee = call->getCallee();
 			if (subgraphMap.count(callee) > 0)
 			{
@@ -163,7 +163,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 			{
 				for (auto templateValue : caller_sectionGenerator->getTemplateVector())
 				{
-					// 规定普通参数依赖模板参数
+					// 
 					addEdge(vertexId(inputValue), templateValue, false);
 				}
 			}
@@ -171,7 +171,7 @@ void GraphNoCallPath::load(std::vector<Section*> rootSectionVector)
 			{
 				for (auto templateValue : caller_sectionGenerator->getTemplateVector())
 				{
-					// 规定约束变元依赖模板参数
+					// 
 					addEdge(vertexId(boundValue), templateValue, false);
 				}
 			}
@@ -252,7 +252,7 @@ void GraphNoCallPath::createFilter(std::vector<bool>& vertexFilter, std::vector<
 		{
 			if (auto section = dynamic_cast<SectionGenerator*>(subgraphAt(g)))
 			{
-				// 带控制流的语句必须保留子Section
+				// Section
 				for (auto call : section->getSectionCallVector())
 				{
 					subgraphFilter[subgraphId(call->getCallee())] = true;
@@ -267,7 +267,7 @@ void GraphNoCallPath::addEdge(uint32_t vertex, Value* dependency, bool isOperand
 	assert(dependency != nullptr);
 	if (dynamic_cast<VariableValue*>(dependency) == nullptr)
 	{
-		// 尝试添加新的顶点表示常量和无效值，新顶点号是当前顶点数量，已经存在则不重复添加
+		// 
 		auto n = (uint32_t)vertexVector.size();
 		if (vertexMap.try_emplace(dependency, n).second)
 		{
@@ -361,7 +361,7 @@ void GraphValueProjection::collectSection()
 	}
 	calleeVector.resize(subgraphVector.size());
 
-	// 广度优先搜索，找出所有Section
+	// Section
 	while (!Q.empty())
 	{
 		auto caller = Q.front();
@@ -386,7 +386,7 @@ void GraphValueProjection::collectSection()
 	}
 	callerVector = getReverseGraph(calleeVector);
 
-	// 对Section拓扑排序，并检查递归
+	// Section
 	vertex_mapping f(subgraphVector.size());
 	subgraphTopologicalSort(f);
 	reorder(f);
@@ -466,7 +466,7 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 	}
 	callerVector = getReverseGraph(calleeVector);
 
-	// 对Section拓扑排序，并检查递归
+	// Section
 	vertex_mapping f(subgraphVector.size());
 	subgraphTopologicalSort(f);
 	reorder(f);
@@ -480,7 +480,7 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 		}
 	}
 
-	// 收集顶点依赖
+	// 
 	operandsVector.resize(vertexVector.size());
 	dependencyVector.resize(vertexVector.size());
 	auto varNum = (uint32_t)vertexVector.size();
@@ -491,14 +491,14 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 		std::vector<SectionCall*> callVector(path.callVector);
 		if (auto inputValue = dynamic_cast<InputValue*>(value))
 		{
-			// 由传参定义的依赖
+			// 
 			if (!inputValue->isTemplate())
 			{
 				if (auto sectionGenerator = dynamic_cast<SectionGenerator*>(inputValue->getSection()))
 				{
 					for (auto templateValue : sectionGenerator->getTemplateVector())
 					{
-						// 规定普通参数依赖模板参数
+						// 
 						addEdge(vertexId({ inputValue, callVector }), templateValue, callVector, false);
 					}
 				}
@@ -523,14 +523,14 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 			{
 				for (auto templateValue : sectionGenerator->getTemplateVector())
 				{
-					// 规定约束变元依赖模板参数
+					// 
 					addEdge(vertexId({ boundValue, callVector }), templateValue, callVector, false);
 				}
 			}
 		}
 		else if (auto resultValue = dynamic_cast<ResultValue*>(value))
 		{
-			// 由返回定义的依赖
+			// 
 			callVector.push_back(resultValue->getCall());
 			auto call = resultValue->getCall();
 			if (subgraphMap.count(SectionCallPath{ call->getCallee(), callVector }) > 0)
@@ -539,7 +539,7 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 			}
 			else
 			{
-				// 如果被调用的图片段未展开，则结果值认为依赖调用前传入的实参
+				// 
 				callVector.pop_back();
 				for (auto value : call->getArgumentVector())
 				{
@@ -553,7 +553,7 @@ void GraphCallPath::load(std::vector<Section*> rootSectionVector)
 		}
 		else if (value != nullptr)
 		{
-			// 由计算顶点定义的依赖
+			// 
 			auto dependencies = value->getDependencyVector();
 			for (auto dependency : dependencies)
 			{
@@ -614,7 +614,7 @@ void GraphCallPath::addEdge(uint32_t vertex, Value* dependency, std::vector<Sect
 	assert(dependency != nullptr);
 	if (!dynamic_cast<VariableValue*>(dependency))
 	{
-		// 尝试添加新的顶点表示常量和无效值，新顶点号是当前顶点数量，已经存在则不重复添加
+		// 
 		auto n = (uint32_t)vertexVector.size();
 		ValueCallPath path = { dependency, {} };
 		if (vertexMap.try_emplace(path, n).second)
@@ -623,12 +623,12 @@ void GraphCallPath::addEdge(uint32_t vertex, Value* dependency, std::vector<Sect
 			operandsVector.emplace_back();
 			dependencyVector.emplace_back();
 		}
-		// 常量没有调用路径
+		// 
 		dependencyVector[vertex].push_back(vertexId({ dependency, {} }));
 	}
 	else
 	{
-		// 变量需要区分调用路径
+		// 
 		dependencyVector[vertex].push_back(vertexId({ dependency, std::move(callVector) }));
 	}
 	if (isOperand)

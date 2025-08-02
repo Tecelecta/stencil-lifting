@@ -36,7 +36,7 @@ std::vector<Value*> getReturnArrays(GraphValueProjection& graph)
 
 int main(int argc, char* argv[])
 {
-	// 解析命令行
+	// 
 	cmdline::parser cmd;
 
 	cmd.add<std::string>("output", 'o', "Output file path", false);
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	}
 
 	auto t_start = clock();
-	// IR生成
+	// IR
 	auto context = std::make_unique<Context>();
 	SectionConstructor sectionConstructor(errorHandler, context.get());
 	std::vector<FunctionDefinition> allFunctions;
@@ -137,11 +137,11 @@ int main(int argc, char* argv[])
 	printf("SubgraphNum = %u, VertexNum = %u\n", graph.getSubgraphNum(), graph.getVertexNum());
 	context->deleteUseless();
 
-	// 机器无关优化
+	// 
 	graph = runOptimizeLevel3(graph, initUsefulSymbols);
 	context->deleteUseless();
 
-	// 输出IR或目标代码
+	// IR
 	std::ofstream out_file;
 	if (!output.empty())
 	{

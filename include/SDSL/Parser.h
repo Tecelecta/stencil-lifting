@@ -13,7 +13,7 @@
 #define RECURSE(ParserClass, message) if (auto ast = ParserClass(errorHandler).run(tokenStream)) astStack.push_back(std::move(ast)); else { INFO(message) return nullptr; }
 #endif
 
-/// 语法分析器基类
+/// 
 class Parser
 {
 protected:
@@ -37,7 +37,7 @@ private:
 	std::queue<Token>* tokenStreamPtr = nullptr;
 };
 
-/// 用于分析整个编译单元的语法分析器
+/// 
 class CompileUnitParser final : public Parser
 {
 public:
@@ -47,7 +47,7 @@ public:
 };
 
 #ifdef PARSER_CPP
-/// 用于分析函数定义的语法分析器
+/// 
 class FunctionDefinitionParser final : public Parser
 {
 public:
@@ -56,7 +56,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析局部变量定义的语法分析器
+/// 
 class VariableDefinitionParser final : public Parser
 {
 public:
@@ -65,7 +65,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析结构体定义的语法分析器
+/// 
 class StructDefinitionParser final : public Parser
 {
 public:
@@ -74,7 +74,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析语句定义的语法分析器
+/// 
 class StatementParser final : public Parser
 {
 public:
@@ -83,7 +83,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析if语句定义的语法分析器
+/// if
 class IfStatementParser final : public Parser
 {
 public:
@@ -92,7 +92,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析Do语句（串行循环）定义的语法分析器
+/// Do
 class DoStatementParser final : public Parser
 {
 public:
@@ -101,7 +101,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析For语句（并行循环）定义的语法分析器
+/// For
 class ForStatementParser final : public Parser
 {
 public:
@@ -110,7 +110,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析赋值语句定义的语法分析器
+/// 
 class AssignStatementParser final : public Parser
 {
 public:
@@ -120,7 +120,7 @@ public:
 };
 
 /**
-* @brief 用于分析左值表达式的语法分析器
+* @brief 
 */
 class LeftValueExpressionParser final : public Parser
 {
@@ -130,7 +130,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析右值表达式的语法分析器
+/// 
 class RightValueExpressionParser final : public Parser
 {
 public:
@@ -139,7 +139,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析数组下标表达式的语法分析器
+/// 
 class ArraySubscriptExpressionParser final : public Parser
 {
 public:
@@ -148,7 +148,7 @@ public:
 	std::unique_ptr<AST> run(std::queue<Token>& tokenStream);
 };
 
-/// 用于分析实参列表的语法分析器，用于函数调用和元组初始化
+/// 
 class ArgumentListExpressionParser final : public Parser
 {
 public:

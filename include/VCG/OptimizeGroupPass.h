@@ -5,19 +5,19 @@
 typedef std::vector<std::pair<Value*, Integer>> GroupNormalForm;
 
 /**
-	* @brief 代数系统：群或半群，加法运算
+	* @brief 
 	* @details
-	* 定义该代数系统上运算满足结合律，可选满足交换律，可选具有单位元和逆元。
+	* 
 	*/
 struct GroupAlgebraSystem
 {
-	Type elemType; //!< 定义代数系统的元素类型
-	Operation addOp; //!< 定义代数系统的“加法”运算
-	Operation subOp; //!< 定义代数系统的“减法”运算
-	Operation negOp; //!< 定义代数系统的“相反数”运算
-	Operation scaOp; //!< 定义代数系统的“数乘”运算
-	ConstantValue* zero = nullptr; //!< 定义代数系统的“0”
-	bool isAbelian = false; //!< 是否阿贝尔群（交换律）
+	Type elemType; //!< 
+	Operation addOp; //!< 
+	Operation subOp; //!< 
+	Operation negOp; //!< 
+	Operation scaOp; //!< 
+	ConstantValue* zero = nullptr; //!< 0
+	bool isAbelian = false; //!< 
 };
 
 class AnalyzeGroupPass : virtual public Pass<GraphOuterSection>, public GroupAlgebraSystem,
@@ -42,7 +42,7 @@ public:
 	std::vector<GroupNormalForm> groupNormalForms;
 };
 
-/// 提取标准化的群代数运算（浅层次）
+/// 
 class ExtractGroupShallowPass : public CopySectionShallowPass, public AnalyzeGroupPass
 {
 public:
@@ -55,7 +55,7 @@ public:
 		OperationValue::Builder& builder, Operation negOp, Operation scaOp);
 };
 
-/// 提取标准化的群代数运算（深层次）
+/// 
 class ExtractGroupDeepPass : public CopySectionDeepPass, public GroupAlgebraSystem
 {
 protected:

@@ -70,6 +70,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Available arguments")
     parser.add_argument("--bench", type=str, help="benchmark to evaluate (custom, stng, both)", default=None)
     parser.add_argument("--downscale", action='store_true', help="using downscaled evaluate")
+    parser.add_argument("--compile_only", action='store_true', help="\'dev-opt\': compile the gen code, do not execute")
     args = parser.parse_args()
 
     src_dirs = []
@@ -83,6 +84,9 @@ if __name__ == "__main__":
     
     for sd in src_dirs:
         build_dir(sd, args.downscale)
+
+    if args.compile_only:
+        exit() 
 
     bin_dir = os.path.join(cwd, 'out', 'bin')
     obj = exec_dir(bin_dir)

@@ -452,8 +452,8 @@ def plot_one_violin(ax, dats, xlabs, colors):
 
 def plot_one_range(ax:Axes, dats, xticks, colors, yscal, ytick_round=0, select=None):
     """
-    绘制范围图
-    输入: dats: Dict[str: Tuple[List, List]] 表示计算图在不同图数据上的ub，lb
+    
+    : dats: Dict[str: Tuple[List, List]] ublb
     """
     assert len(dats) <= len(colors)
 

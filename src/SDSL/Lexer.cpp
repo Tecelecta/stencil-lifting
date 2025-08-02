@@ -22,21 +22,21 @@ static const std::unordered_map<std::string_view, Token::Category> KEYWORD_MAP =
 
 std::queue<Token> Lexer::run(std::string_view code)
 {
-	// 处理空输入
+	// 
 	if (code.empty())
 	{
 		tokenEnd(Token::Category::END_OF_FILE);
 		goto SUCCESS;
 	}
 
-	// 初始化输入状态，然后启动DFA
+	// DFA
 	this->code = code;
 	currIndex = 0;
 	currLine = 1;
 	currColumn = 1;
 	curr = code[0];
 
-// DFA开始状态
+// DFA
 START: {
 	tokenBegin();
 	switch (curr)
@@ -84,7 +84,7 @@ START: {
 	}
 }
 
-// 标识符
+// 
 IDENTIFIER: {
 	if (curr == '_' || isalpha(curr) || isdigit(curr))
 	{
@@ -104,7 +104,7 @@ IDENTIFIER: {
 	goto START;
 }
 	
-// 注解
+// 
 ANNOTATION: {
 	if (curr == '_' || isalpha(curr) || isdigit(curr))
 	{
@@ -115,7 +115,7 @@ ANNOTATION: {
 	goto START;
 }
 
-// 判断以0开头的数字：0 0. 0xX 0bB
+// 00 0. 0xX 0bB
 ZERO: {
 	if (curr == 'x' || curr == 'X')
 	{
@@ -144,7 +144,7 @@ ZERO: {
 	goto START;
 }
 
-// 十进制整数
+// 
 DEC_INTEGER: { // -> 0 | ([1-9][0-9]*) EXPONENT ->[eE][+-] ? [DIGIT]+
 	if (isdigit(curr))
 	{
@@ -173,7 +173,7 @@ DEC_INTEGER: { // -> 0 | ([1-9][0-9]*) EXPONENT ->[eE][+-] ? [DIGIT]+
 	goto START;
 }
 
-// 以数字开头
+// 
 DIGIT: { // -> [0-9]*
 	if (isdigit(curr))
 	{
@@ -202,14 +202,14 @@ DIGIT: { // -> [0-9]*
 	goto START;
 }
 
-// 十进制浮点数 -> DEC_INTEGER\.FRACTION ; FRACTION -> [DIGIT]+EXPONENT? ; EXPONENT ->[eE][+-] ? [DIGIT]+ ;
+//  -> DEC_INTEGER\.FRACTION ; FRACTION -> [DIGIT]+EXPONENT? ; EXPONENT ->[eE][+-] ? [DIGIT]+ ;
 FLOAT: {
 	if (isdigit(curr))
 	{
 		nextChar();
 		goto FRACTION;
 	}
-	ERROR("小数部分出现Illegal token")
+	ERROR("Illegal token")
 }
 FRACTION: {
 	if (isdigit(curr))
@@ -237,7 +237,7 @@ EXPFLOAT: {
 	}
 	else
 	{
-		ERROR("指数部分出现Illegal token")
+		ERROR("Illegal token")
 	}
 }
 EXPFLOATDIGIT: {
@@ -248,20 +248,20 @@ EXPFLOATDIGIT: {
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("指数部分出现Illegal token")
+		ERROR("Illegal token")
 	}
 	tokenEnd(Token::Category::DEC_RATIONAL);
 	goto START;
 }
 
-// 十六进制整数
+// 
 HEX_INTEGER: { // -> 0[xX][0-9a-fA-F]+
 	if (isxdigit(curr)) // checks whether CURR is a hexdecimal DIGIT character
 	{
 		nextChar();
 		goto HEXDIGIT;
 	}
-	ERROR("整数部分出现Illegal token")
+	ERROR("Illegal token")
 }
 HEXDIGIT: { // -> [0-9a-fA-F]*
 	if (isxdigit(curr)) // checks whether CURR is a hexdecimal digit character
@@ -271,20 +271,20 @@ HEXDIGIT: { // -> [0-9a-fA-F]*
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("整数部分出现Illegal token")
+		ERROR("Illegal token")
 	}
 	tokenEnd(Token::Category::HEX_INTEGER);
 	goto START;
 }
 
-// 二进制整数
+// 
 BIN_INTEGER: { // -> 0[bB][01]+
 	if (curr == '0' || curr == '1')
 	{
 		nextChar();
 		goto BINDIGIT;
 	}
-	ERROR("整数部分出现Illegal token")
+	ERROR("Illegal token")
 }
 BINDIGIT: { // -> [01]*
 	if (curr == '0' || curr == '1')
@@ -294,13 +294,13 @@ BINDIGIT: { // -> [01]*
 	}
 	else if (isalnum(curr))
 	{
-		ERROR("整数部分出现Illegal token")
+		ERROR("Illegal token")
 	}
 	tokenEnd(Token::Category::BIN_INTEGER);
 	goto START;
 }
 
-// 运算符
+// 
 OPERATOR: {
 	switch (curr)
 	{
@@ -497,7 +497,7 @@ OPERATOR: {
 	}
 }
 
-// 标点符号
+// 
 PUNCTUATION: {
 	switch (curr)
 	{
@@ -550,7 +550,7 @@ PUNCTUATION: {
 	}
 }
 
-// 单行注释
+// 
 COMMENT_SINGLELINE: {
 	if (curr == '\r' || curr == '\n' || curr == '\0')
 	{
@@ -560,14 +560,14 @@ COMMENT_SINGLELINE: {
 	goto COMMENT_SINGLELINE;
 }
 
-// 多行注释
+// 
 COMMENT_MULTILINE: {
 	if (curr == '*')
 	{
 		nextChar();
 		goto COMMENT_MULTILINE_STAR;
 	}
-	else if (curr == '\0') // 在文件结束的时候都没有匹配到*/，说明注释符号有误
+	else if (curr == '\0') // */
 	{
 		ERROR("Incomplete comment")
 	}
@@ -580,7 +580,7 @@ COMMENT_MULTILINE_STAR: {
 		nextChar();
 		goto START;
 	}
-	else if (curr == '\0') // 在文件结束的时候都没有匹配到*/，说明注释符号有误
+	else if (curr == '\0') // */
 	{
 		ERROR("Incomplete comment")
 	}
@@ -592,12 +592,12 @@ COMMENT_MULTILINE_STAR: {
 ILLEGAL:
 	ERROR("Illegal token")
 
-// DFA成功结束
+// DFA
 SUCCESS:
 	return std::move(tokenStream);
 }
 
-// 吞字符
+// 
 void Lexer::nextChar()
 {
 	switch (curr)
@@ -626,7 +626,7 @@ void Lexer::nextChar()
 	curr = currIndex < code.size() ? code[currIndex] : '\0';
 }
 
-// 不吞当前字符，记录当前字符开始位置
+// 
 void Lexer::tokenBegin()
 {
 	beginIndex = currIndex;
@@ -634,9 +634,9 @@ void Lexer::tokenBegin()
 	beginColumn = currColumn;
 }
 
-// 记录当前字符结束位置，并输出到Token流
+// Token
 void Lexer::tokenEnd(Token::Category category)
 {
-	auto sub = code.substr(beginIndex, currIndex - beginIndex); // 不包括当前字符
+	auto sub = code.substr(beginIndex, currIndex - beginIndex); // 
 	tokenStream.emplace(Token{ category, beginLine, beginColumn, sub });
 }

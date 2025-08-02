@@ -6,7 +6,7 @@
 #include <string>
 #include <optional>
 
-/// 用于输出错误信息的抽象基类
+/// 
 class ErrorHandler
 {
 protected:

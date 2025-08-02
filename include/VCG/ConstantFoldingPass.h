@@ -3,7 +3,7 @@
 #include "CopySectionPass.h"
 #include "ConstantEvaluateUtil.h"
 
-/// 常量折叠优化（浅层次）
+/// 
 class ConstantFoldingShallowPass : public CopySectionShallowPass, protected ConstantEvaluateUtil, private SccAction
 {
 public:
@@ -19,7 +19,7 @@ private:
 	bool runOnTypical(const vertex_list& scc) override;
 };
 
-/// 常量折叠优化（深层次）
+/// 
 class ConstantFoldingDeepPass : public CopySectionDeepPass
 {
 protected:

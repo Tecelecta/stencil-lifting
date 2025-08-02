@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-/// 向std::ostream中输出错误信息
+/// std::ostream
 class ErrorHandlerStream final : public ErrorHandler
 {
 public:

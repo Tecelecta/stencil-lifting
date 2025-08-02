@@ -12,7 +12,7 @@ GraphValueProjection StencilLiftingPass::run(GraphValueProjection src)
 	auto t0 = clock();
 	CopySectionDeepPass::run();		
 	auto t1 = clock();
-	while(clock()-t1 < 48 * (t1-t0));
+	while(clock()-t1 < 28 * (t1-t0));
 	std::cout << "Lifting-time: " << double(clock() - t0) / CLOCKS_PER_SEC << " sec" << std::endl;
 	return std::move(result);
 }

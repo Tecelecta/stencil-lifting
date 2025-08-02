@@ -116,7 +116,7 @@ void LoopParallelizePass::createSectionBuilders()
 
 PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summary, SummaryBuilders& summaryBuilders)
 {
-	// 确定循环层数
+	// 
 	auto numDims = value->getType().getNumDims();
 	std::vector<bool> isLoop(numDims, false);
 	std::vector<std::optional<uint32_t>> loopDim(numDims, std::nullopt);
@@ -139,7 +139,7 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 		}
 	}
 
-	// 并行循环参数
+	// 
 	auto loop = summaryBuilders.loop.sectionBuilder.createInstance(context, numLoops);
 	createParameters(outerValueMap, summaryBuilders.loop.sectionBuilder,
 		summaryBuilders.loop.callBuilder, summaryBuilders.loop.valueMap);
@@ -153,7 +153,7 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 	}
 	sectionBuilderVector[0].addSectionCall(summaryBuilders.loop.callBuilder);
 
-	// 循环体参数
+	// 
 	auto body = summaryBuilders.body.sectionBuilder.createInstance(context);
 	createParameters(summaryBuilders.loop.valueMap, summaryBuilders.body.sectionBuilder,
 		summaryBuilders.body.callBuilder, summaryBuilders.body.valueMap);
@@ -164,7 +164,7 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 	summaryBuilders.branches.resize(summary.branches.size());
 	for (size_t i = 0; i < summary.branches.size(); i++)
 	{
-		// 每个分支的参数
+		// 
 		auto& branchBuilders = summaryBuilders.branches[i];
 		branchBuilders.branch.sectionBuilder.createInstance(context);
 		for (uint32_t j = 0; j < w.size(); j++)
@@ -179,13 +179,13 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 			branchBuilders.branch.callBuilder, branchBuilders.branch.valueMap);
 		summaryBuilders.body.sectionBuilder.addSectionCall(branchBuilders.branch.callBuilder);
 
-		// 分支条件
+		// 
 		auto branch = branchBuilders.branch.sectionBuilder.getInstance();
 		auto cond_value = translateExprAndSaveResult(summary.branches[i].cond,
 			summaryBuilders.body.sectionBuilder, summaryBuilders.body.valueMap);
 		branchBuilders.branch.callBuilder.setSpecializer(0, cond_value);
 
-		// 分支内容
+		// 
 		auto leaf = branchBuilders.leaf.sectionBuilder.createInstance(context);
 		createParameters(branchBuilders.branch.valueMap, branchBuilders.leaf.sectionBuilder,
 			branchBuilders.leaf.callBuilder, branchBuilders.leaf.valueMap);
@@ -205,7 +205,7 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 		auto store_value = branchBuilders.leaf.sectionBuilder.createArraySetValue(
 			base_value_leaf, index_values, elem_value, base_value_leaf->getName());
 
-		// 分支结果
+		// 
 		auto result_value_leaf = branchBuilders.leaf.callBuilder.createResultValue(store_value, store_value->getName());
 		auto base_value_branch = branchBuilders.branch.valueMap.at(summary.base);
 		auto phi_value_branch = branchBuilders.branch.sectionBuilder.createPhiValue(
@@ -220,7 +220,7 @@ PhiValue* LoopParallelizePass::translatePhi(PhiValue* value, const Summary& summ
 #endif // _DEBUG
 	}
 
-	// 循环结果
+	// 
 	auto result_value_body = summaryBuilders.body.callBuilder.createResultValue(array_value_body, array_value_body->getName());
 	auto base_value_loop = summaryBuilders.loop.valueMap.at(summary.base);
 	auto phi_value_loop = summaryBuilders.loop.sectionBuilder.createPhiValue(
@@ -454,9 +454,9 @@ Value* LoopParallelizePass::translateExpr(z3::expr expr, SimpleSection::Builder 
 				auto tupleGet = translateTupleGet(expr, builder, valueMap);
 				if (tupleGet == nullptr)
 				{
-					// 不是tuple应该是free variable了
+					// tuplefree variable
 					if (expr.to_string()[0] == 'w') {
-						throw std::logic_error("需要创建bound value");
+						throw std::logic_error("bound value");
 					} else {
 						std::cerr << expr << std::endl;
 						throw std::logic_error("Operand not found");

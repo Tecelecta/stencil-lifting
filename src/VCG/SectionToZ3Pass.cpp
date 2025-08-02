@@ -426,7 +426,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
                     return true;
                 }
                 std::cerr << value->getOperation().getName() << std::endl;
-                assert(false); // 缺算子
+                assert(false); // 
             }
             return false;
         };
@@ -602,7 +602,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
                 auto& summary = summaryVector[i];
                 const auto& init_summary = summaryVector[getOperandsByVertex(i)[0]];
                 const auto& loop_summary = summaryVector[getOperandsByVertex(i)[1]];
-                // 以init incoming为新summary的初始状态
+                // init incomingsummary
                 summary = init_summary.copyBase();
                 for (const auto& branch : loop_summary.branches)
                 {
@@ -611,7 +611,7 @@ SectionToZ3Pass::SectionToZ3Pass(z3::context& z3ctx)
                         summary.addBranch(branch);
                     }
                 }
-                // 利用section.boundValue补全新summary.branches的index信息,同时对b_i进行skolemize
+                // section.boundValuesummary.branchesindex,b_iskolemize
                 for (auto boundValue : loop->getBoundVector())
                 {
                     const auto& bound_summary = summaryVector[vertexId({ boundValue, callVector })];

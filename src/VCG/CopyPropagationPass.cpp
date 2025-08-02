@@ -49,7 +49,7 @@ AnalyzeCopyValuePass::AnalyzeCopyValuePass()
 
     visitPhiValue = [this](PhiValue* value, uint32_t i)
         {
-            // 开头的不可以是回边
+            // 
             auto init = vertexEquClass[getOperandsByVertex(i)[0]];
             for (uint32_t j = 1; j < value->getIncomingVectorSize(); j++)
             {
@@ -85,7 +85,7 @@ bool AnalyzeCopyValuePass::runOnTypical(const vertex_list& scc)
         std::vector<PhiValue*> phiValueVector;
         std::vector<ResultValue*> resultValueVector;
         splitPhiAndResult(scc, phiValueVector, resultValueVector);
-        // 迭代计算2次，必定收敛
+        // 2
         for (auto phiValue : phiValueVector)
         {
             uint32_t i = vertexId(phiValue);

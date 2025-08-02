@@ -24,7 +24,7 @@ SimpleSectionInlinePass::SimpleSectionInlinePass()
 			}
 			else
 			{
-				// 将形参映射为实参
+				// 
 				valueResultVector[i] = mapValue({ callVector.back()->getArgument(value->getIndex()),
 					std::vector<SectionCall*>(callVector.begin(), callVector.end() - 1) });
 			}
@@ -36,7 +36,7 @@ SimpleSectionInlinePass::SimpleSectionInlinePass()
 			src_path.callVector.push_back(value->getCall());
 			if (vertexExists(src_path))
 			{
-				// 将结果映射为数据源
+				// 
 				valueResultVector[i] = mapValue({ src_path.value, src_path.callVector });
 			}
 			else
@@ -44,7 +44,7 @@ SimpleSectionInlinePass::SimpleSectionInlinePass()
 				auto src = mapValueByParent(value->getSrc());
 				if (dynamic_cast<VariableValue*>(src) == nullptr)
 				{
-					// 结果值被映射为常量
+					// 
 					valueResultVector[i] = src;
 				}
 				else
