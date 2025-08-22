@@ -12,7 +12,7 @@ SUBROUTINE advect_u_implicit( rt, u_old, tendency,            &
    
    INTEGER :: its, ite, jts, jte, kts, kte
 
-   REAL , DIMENSION( its:ite , kts-1:kte+1, jts:jte ) :: rom ! IN
+   REAL , DIMENSION( its-1:ite , kts:kte+1, jts:jte ) :: rom ! IN
    REAL , DIMENSION( its:ite , kts  :kte  , jts:jte ) :: u_old, tendency
 !-------------------------------------------------------------------------------
 ! LWJ: definitions of various column masses 

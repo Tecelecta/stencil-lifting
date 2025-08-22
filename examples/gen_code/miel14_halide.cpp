@@ -108,17 +108,18 @@ Func targetFunction(Buffer<float, 3> w_old,
     Func rt("advect_v_implicit");
     Expr dt_rk(.375f);
 
-    Expr k_m1 = max(k-1, 0);
-    Expr k_p1 = min(k+1, tendency.dim(1).extent() - 1);
+    Func rom_r("rom_remap"), w_old_r("wold_remap");
+    rom_r(i, k, j) = rom(i, k+1, j);
+    w_old_r(i, k, j) = w_old(i, k+1, j);
 
-    auto wiL = 0.5f * (rom(i, k_m1, j) + rom(i, k, j)) * rdzu(k) * msfty(i, j) / (c1(k)*mut_new(i, j) + c2(k));
-    auto wiR = 0.5f * (rom(i, k_p1, j) + rom(i, k, j)) * rdzu(k) * msfty(i, j) / (c1(k)*mut_new(i, j) + c2(k));
+    auto wiL = 0.5f * (rom_r(i, k-1, j) + rom_r(i, k, j)) * rdzu(k) * msfty(i, j) / (c1(k)*mut_new(i, j) + c2(k));
+    auto wiR = 0.5f * (rom_r(i, k+1, j) + rom_r(i, k, j)) * rdzu(k) * msfty(i, j) / (c1(k)*mut_new(i, j) + c2(k));
     auto at = -dt_rk * max(wiL, Expr(0.f));
     auto ct =  dt_rk * min(wiR, Expr(0.f));
     auto btmp = dt_rk * (max(wiR, Expr(0.f)) - min(wiL, Expr(0.f)));
     auto bt = 1.0f + btmp;
     rt(i,k,j) = dt_rk * tendency(i,k,j) * msfty(i,j)
-                - (c1(k)*mut_old(i,j)+c2(k))*(at*w_old(i,k_m1,j) + btmp*w_old(i,k,j) + ct*w_old(i,k_p1,j));
+                - (c1(k)*mut_old(i,j)+c2(k))*(at*w_old_r(i,k-1,j) + btmp*w_old_r(i,k,j) + ct*w_old_r(i,k+1,j));
     return rt;
 }
 
@@ -157,7 +158,7 @@ int main(int argc, char** argv)
 
     const int in_d1_range = d1_range + 1;
     const int in_d2_range = d2_range + 1;
-    const int in_d3_range = d3_range + 3;
+    const int in_d3_range = d3_range + 1;
 
     // --------------------------- Preparation --------------------------
     printf("Prepare the random data\n");
@@ -203,9 +204,9 @@ int main(int argc, char** argv)
                      mut_old({in_d1_range, in_d3_range}, "mut_old"), mut_old_g(mut_old),
                      mut_new({in_d1_range, in_d3_range}, "mut_new"), mut_new_g(mut_new);
     
-    Buffer<float, 3> w_old({in_d1_range, in_d2_range+1, in_d3_range}, "w_old"), w_old_g(w_old),
+    Buffer<float, 3> w_old({in_d1_range, in_d2_range+2, in_d3_range}, "w_old"), w_old_g(w_old),
                      tendency({in_d1_range, in_d2_range, in_d3_range}, "tendency"), tendency_g(tendency),
-                     rom({in_d1_range, in_d2_range+1, in_d3_range}, "rom"), rom_g(rom);
+                     rom({in_d1_range, in_d2_range+2, in_d3_range}, "rom"), rom_g(rom);
 
     // Fortran output
     Buffer<float, 3> out_base({in_d1_range, in_d2_range, in_d3_range}, "out_base"); 

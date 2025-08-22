@@ -131,8 +131,8 @@ extern "C" {
         const float* mut_old, const float* mut_new,
         const float* rdzw,
         const int* its, const int* ite,
-        const int* kts, const int* kte,
-        const int* jts, const int* jte
+        const int* jts, const int* jte,
+        const int* kts, const int* kte
     );
 }
 
@@ -252,8 +252,8 @@ int main(int argc, char** argv)
         mut_new.get()->begin(),
         rdzw.get()->begin(),
         &its, &ite,
-        &kts, &kte,
-        &jts, &jte
+        &jts, &jte,
+        &kts, &kte
     );
 
     // CPU execution

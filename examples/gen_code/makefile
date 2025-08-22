@@ -13,6 +13,10 @@ CXX ?= g++
 FORT ?= gfortran
 FFLAGS = -O0
 
+ifneq ($(FORT), gfortran)
+FFLAGS += -mmlir -fdynamic-heap-array
+endif
+
 ifeq ($(SCALE), down)
 CFLAGS = -D_3D_1=256 -D_3D_2=256 -D_3D_3=256 \
          -D_2D_1=4e3 -D_2D_2=4e3 \

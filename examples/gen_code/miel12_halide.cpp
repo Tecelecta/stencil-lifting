@@ -112,10 +112,12 @@ Func targetFunction(Buffer<float, 3> u_old,
     Expr kte = tendency.dim(1).extent() - 1;
     Expr km1 = max(k-1, kts);
     Expr kp1 = min(k+1, kte);
-    Expr i_m1 = max(i-1, 0);
 
-    auto wiL = 0.5f * (rom(i_m1, k, j) + rom(i, k, j)) * rdzw(k) * msfuy(i, j) / (c1(k)*muu_new(i, j) + c2(k));
-    auto wiR = 0.5f * (rom(i_m1, k+1, j) + rom(i, k+1, j)) * rdzw(k) * msfuy(i, j) / (c1(k)*muu_new(i, j) + c2(k));
+    Func rom_r("rom_remap");
+    rom_r(i,k,j) = rom(i+1, k, j);
+
+    auto wiL = 0.5f * (rom_r(i-1, k, j) + rom_r(i, k, j)) * rdzw(k) * msfuy(i, j) / (c1(k)*muu_new(i, j) + c2(k));
+    auto wiR = 0.5f * (rom_r(i-1, k+1, j) + rom_r(i, k+1, j)) * rdzw(k) * msfuy(i, j) / (c1(k)*muu_new(i, j) + c2(k));
     auto at = -dt_rk * max(wiL, Expr(0.f));
     auto ct =  dt_rk * min(wiR, Expr(0.f));
     auto btmp = dt_rk * (max(wiR, Expr(0.f)) - min(wiL, Expr(0.f)));
@@ -133,8 +135,8 @@ extern "C" {
         const float* muu_old, const float* muu_new,
         const float* msfuy, const float* rdzw,
         const int* its, const int* ite,
-        const int* kts, const int* kte,
-        const int* jts, const int* jte
+        const int* jts, const int* jte,
+        const int* kts, const int* kte
     );
 }
 

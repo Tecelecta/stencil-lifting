@@ -145,9 +145,9 @@ extern "C" {
         const float* pho, const float* tendency, const float* phb, 
         const float *wwi, const float* c1, const float* c2,
         const float *mut, const float *msfty, const float* rdzw,
+        const int* its, const int* ite,
         const int* jts, const int* jte, 
-        const int* kts, const int* kte, 
-        const int* its, const int* ite
+        const int* kts, const int* kte
     );
 }
 

@@ -12,8 +12,8 @@ SUBROUTINE advect_v_implicit( rt, v_old, tendency,            &
    
    INTEGER :: its, ite, jts, jte, kts, kte
 
-   REAL , DIMENSION( its:ite , kts-1:kte+1, jts-1:jte ) :: rom ! IN
-   REAL , DIMENSION( its:ite , kts  :kte  , jts:jte ) :: v_old, tendency
+   REAL , DIMENSION( its:ite , kts:kte+1, jts-1:jte ) :: rom ! IN
+   REAL , DIMENSION( its:ite , kts:kte  , jts:jte ) :: v_old, tendency
 !-------------------------------------------------------------------------------
 ! LWJ: definitions of various column masses 
 ! mut    ==> current column mass from sub-step

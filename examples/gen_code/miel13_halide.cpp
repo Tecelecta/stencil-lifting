@@ -113,10 +113,12 @@ Func targetFunction(Buffer<float, 3> v_old,
     Expr kte = tendency.dim(1).extent() - 1;
     Expr km1 = max(k-1, kts);
     Expr kp1 = min(k+1, kte);
-    Expr j_m1 = max(j-1, 0);
 
-    auto wiL = 0.5f * (rom(i, k, j_m1) + rom(i, k, j)) * rdzw(k) * msfvy(i, j) / (c1(k)*muv_new(i, j) + c2(k));
-    auto wiR = 0.5f * (rom(i, k+1, j_m1) + rom(i, k+1, j)) * rdzw(k) * msfvy(i, j) / (c1(k)*muv_new(i, j) + c2(k));
+    Func rom_r("rom_remap");
+    rom_r(i,k,j) = rom(i,k,j+1);
+
+    auto wiL = 0.5f * (rom_r(i, k, j-1) + rom_r(i, k, j)) * rdzw(k) * msfvy(i, j) / (c1(k)*muv_new(i, j) + c2(k));
+    auto wiR = 0.5f * (rom_r(i, k+1, j-1) + rom_r(i, k+1, j)) * rdzw(k) * msfvy(i, j) / (c1(k)*muv_new(i, j) + c2(k));
     auto at = -dt_rk * max(wiL, Expr(0.f));
     auto ct =  dt_rk * min(wiR, Expr(0.f));
     auto btmp = dt_rk * (max(wiR, Expr(0.f)) - min(wiL, Expr(0.f)));
@@ -160,7 +162,7 @@ int main(int argc, char** argv)
 
     const int in_d1_range = d1_range + 1;
     const int in_d2_range = d2_range + 1;
-    const int in_d3_range = d3_range + 2;
+    const int in_d3_range = d3_range + 1;
 
     // --------------------------- Preparation --------------------------
     printf("Prepare the random data\n");

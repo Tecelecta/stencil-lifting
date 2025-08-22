@@ -10,7 +10,7 @@ SUBROUTINE advect_s_implicit( rt, s_old, tendency,            &
 
    INTEGER :: its, ite, jts, jte, kts, kte
 
-   REAL , DIMENSION( its:ite , kts-1:kte+1, jts:jte ) :: rom !IN
+   REAL , DIMENSION( its:ite , kts:kte+1, jts:jte ) :: rom !IN
    REAL , DIMENSION( its:ite , kts:kte  , jts:jte ) :: s_old
 
 
