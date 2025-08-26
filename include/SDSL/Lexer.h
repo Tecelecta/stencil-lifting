@@ -5,7 +5,7 @@
 
 #include <queue>
 
-/// 词法分析器类
+/// 
 class Lexer final
 {
 public:
@@ -23,7 +23,7 @@ public:
 	struct Config
 	{
 		uint32_t tabSpaces = 4;
-		bool endlCR = false; // MacOS以'\r'作为换行符号
+		bool endlCR = false; // MacOS'\r'
 	} config;
 
 private:

@@ -25,7 +25,7 @@ def lift_dir(src_dir, dst_dir, sdslc):
                 print("Output:\n %s" % ret.stderr)
             else:
                 for console_out in ret.stdout.split('\n'):
-                    # if len(console_out) > 0 and console_out[0] == '用':
+                    # if len(console_out) > 0 and console_out[0] == '':
                     #     lift_time = float(console_out[2:-1])
                     if console_out.find("Total-time:") == 0:
                         lift_time = float(console_out.split()[1])

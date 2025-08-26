@@ -2,7 +2,7 @@
 
 #include "CopySectionPass.h"
 
-/// Stencil计算的提升
+/// Stencil
 class StencilLiftingPass : public CopySectionDeepPass
 {
 public:

@@ -43,7 +43,7 @@ private:
 	bool isInvar(uint32_t i) const;
 
 public:
-	GraphValueProjection result; //! 变换的结果
+	GraphValueProjection result; //! 
 
 private:
 	Value::Visitor<void, uint32_t> createValueBuildersVisitor;

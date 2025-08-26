@@ -2,7 +2,7 @@
 
 /**
  * @file String.h
- * @brief 使用享元模式的只读字符串类
+ * @brief 
  */
 
 #include "Symbol.h"
@@ -10,11 +10,11 @@
 #include <unordered_map>
 
 /**
-	* @brief 使用享元模式的只读字符串类
+	* @brief 
 	* @details
-	* 在内存中使用 String::Impl 类表示，然后使用该类的作为接口。
-	* 使用值传递，相比std::string更高效，相比std::string_view更安全
-	* 通常用于名称字段，对于字符串类型的常量，也使用此类表示字面量的值
+	*  String::Impl 
+	* std::stringstd::string_view
+	* 
 	*/
 class String : public Symbol
 {
@@ -37,22 +37,22 @@ protected:
 public:
 	String(Impl* impl_ptr = nullptr) : Symbol(impl_ptr) {}
 
-	/// 获取C++标准库风格字符串引用
+	/// C++
 	const std::string& str() const { return getImpl().data; }
 
-	/// 获取C++标准库字符串视图
+	/// C++
 	const std::string_view view() const { return getImpl().data; }
 
-	/// 获取C风格字符串指针
+	/// C
 	const char* c_str() const { return str().c_str(); }
 
-	/// 判断字符串是否为空
+	/// 
 	bool isEmpty() const { return str().empty(); }
 
-	/// 判断字符串是否为有效（非null且非空）
+	/// null
 	bool isValid() const { return !(impl_ptr == nullptr || isEmpty()); }
 
-	/// 判断是否与C字符串相等
+	/// C
 	bool equals(std::string_view other) const { return impl_ptr != nullptr && view() == other; }
 
 public:
@@ -76,10 +76,10 @@ protected:
 	void eraseUseless() override;
 
 public:
-	/// 获取只读字符串对象
+	/// 
 	VCG_API String getString(std::string_view data);
 
-	/// 获取只读空字符串对象
+	/// 
 	String getEmptyString() { return getString(std::string_view()); }
 
 private:

@@ -2,7 +2,7 @@
 
 /**
  * @file Enum.h
- * @brief 将枚举类型包装成Symbol的子类
+ * @brief Symbol
  */
 
 #include "Symbol.h"
@@ -12,11 +12,11 @@
 
 using std::type_info;
 
-/// 表示一个枚举类型的符号
+/// 
 class Enum : public Symbol
 {
 public:
-	/// 枚举类型和枚举值
+	/// 
 	struct Data
 	{
 		const type_info* type = nullptr;
@@ -76,13 +76,13 @@ public:
 
 	bool isTrue() const { return getValue<LogicEnum>() != LogicEnum::FALSE; }
 
-	/// 逻辑与，并创建新对象
+	/// 
 	VCG_API Logic operator&&(const Logic& other) const;
 
-	/// 逻辑或，并创建新对象
+	/// 
 	VCG_API Logic operator||(const Logic& other) const;
 
-	/// 逻辑非，并创建新对象
+	/// 
 	VCG_API Logic operator!() const;
 };
 
@@ -105,24 +105,24 @@ protected:
 
 	void eraseUseless() override;
 
-	/// 通过枚举类型和枚举值获取枚举对象
+	/// 
 	VCG_API Enum getEnum(const type_info* type, size_t value);
 
 public:
-	/// 获取枚举对象
+	/// 
 	template<typename _enum>
 	Enum getEnum(_enum value) { return getEnum(&typeid(_enum), static_cast<size_t>(value)); }
 
-	/// 获取逻辑类型对象
+	/// 
 	Logic getLogic(LogicEnum value) { return getEnum(&typeid(LogicEnum), static_cast<size_t>(value)).cast<Logic>(); }
 
-	/// 获取值为true的逻辑类型对象
+	/// true
 	Logic getTrue() const { return trueConstant; }
 
-	/// 获取值为false的逻辑类型对象
+	/// false
 	Logic getFalse() const { return falseConstant; }
 
-	/// 获取逻辑类型对象
+	/// 
 	Logic getLogic(bool value) const { return value ? getTrue() : getFalse(); }
 
 private:

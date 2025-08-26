@@ -31,7 +31,7 @@ Operation OperationMatcher::matchBasicTypeConstructor(
 	Type dstType, Type srcType,
 	size_t opLine, size_t opColumn)
 {
-	// 相等、继承、协变的情况在外部有判断 
+	//  
 	size_t srcBits = 0;
 	size_t dstBits = 0;
 	if (srcType == context->getIntegerType())
@@ -149,7 +149,7 @@ Operation OperationMatcher::matchIntrinsicFunction(
 	Token token, Context* context,
 	const std::vector<Type>& srcType, const std::vector<bool>& isImm)
 {
-	// TODO: 实现重载匹配
+	// TODO: 
 	bool all_integer = !srcType.empty();
 	for (const auto& type : srcType)
 	{
@@ -186,8 +186,8 @@ Operation OperationMatcher::matchOperatorExpression(
 
 	// Arithmetic Operation
 	case Token::Category::ADD:
-		// TODO: 代数类型找继承的公共祖先
-		// 隐式转换，int2fp，短2长
+		// TODO: 
+		// int2fp2
 		return matchBinaryArithmeticOperation("add", "add", "add", __args__);
 	case Token::Category::SUB:
 		return leftType == nullptr ?
@@ -278,7 +278,7 @@ Operation OperationMatcher::matchAssignmentOperation(
 {
 	if (rightType.canBeArgument(leftType))
 	{
-		// 相等、继承、协变都可以直接拷贝
+		// 
 		return context->getCopyOperation(leftType);
 	}
 	size_t leftBits = 0;
@@ -293,7 +293,7 @@ Operation OperationMatcher::matchAssignmentOperation(
 		{
 			if (leftBits > rightBits)
 			{
-				// 有符号整型符号扩展，暂时不写无符号整型
+				// 
 				return context->getOperation(context->getString("int.sext"), { rightType }, leftType);
 			}
 			return context->getOperation(context->getString("int.trunc"), { rightType }, leftType);
@@ -329,7 +329,7 @@ Operation OperationMatcher::matchAssignmentOperation(
 		ERROR("In assignment: assigning current operand to floating point value is not allowed")
 	}
 	ERROR("In assignment: current operand type is not allowed")
-	// TODO: 考虑integer promotion
+	// TODO: integer promotion
 }
 
 Operation OperationMatcher::matchUnaryArithmeticOperation(
@@ -576,7 +576,7 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 			}
 			ERROR("In bit operation: operand bit-width not match")
 		}
-		else if (isFloatType(rightType, rightBits)) // 掩码运算
+		else if (isFloatType(rightType, rightBits)) // 
 		{
 			if (leftBits == rightBits)
 			{
@@ -597,7 +597,7 @@ Operation OperationMatcher::matchBinaryBitwiseOperation(
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
-		if (isIntType(rightType, rightBits)) // 掩码运算
+		if (isIntType(rightType, rightBits)) // 
 		{
 			if (leftBits == rightBits)
 			{
@@ -650,7 +650,7 @@ Operation OperationMatcher::matchShiftOperation(
 	ERROR("In shifting operation: current operand type is not allowed")
 }
 
-Operation OperationMatcher::matchRelationalOperation( // TODO 两边都是Imm->RealType ; a < 1.5 -> a <= 1
+Operation OperationMatcher::matchRelationalOperation( // TODO Imm->RealType ; a < 1.5 -> a <= 1
 	std::string uop, std::string sop, std::string op,
 	Context* context,
 	Type leftType, Type rightType,
@@ -897,7 +897,7 @@ Operation OperationMatcher::matchBitwiseAssignmentOperation(
 	}
 	else if (isFloatType(leftType, leftBits))
 	{
-		if (isIntType(rightType, rightBits)) // 掩码运算
+		if (isIntType(rightType, rightBits)) // 
 		{
 			if (leftBits == rightBits)
 			{

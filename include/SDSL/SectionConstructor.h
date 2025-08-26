@@ -11,11 +11,11 @@ public:
 	SDSL_API explicit SectionConstructor(ErrorHandler& errorHandler, Context* context);
 
 	/**
-		* @brief 对一个编译单元进行语义分析
-		* @param[in] ast 语法树根
-		* @param[in] context 计算图上下文
-		* @param[out] allFunctions 在尾部添加编译成功的函数
-		* @return 是否编译成功
+		* @brief 
+		* @param[in] ast 
+		* @param[in] context 
+		* @param[out] allFunctions 
+		* @return 
 		*/
 	SDSL_API bool runOnCompileUnit(AST* ast, std::vector<FunctionDefinition>& allFunctions);
 

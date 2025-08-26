@@ -154,12 +154,12 @@ bool SectionConstructor::runOnFunctionParameter(AST* ast, SimpleSection::Builder
 				auto symbol = context->getString(ast->children[i]->firstToken.text);
 				switch (i % 3)
 				{
-				case 1: // 参数类型
+				case 1: // 
 					inputValue = parameterBuilder.createInstance(context);
 					parameterBuilder.setType(getTypeObject(ast->children[i].get()));
 					success = success && inputValue->getType() != nullptr;
 					break;
-				case 2: // 参数名称
+				case 2: // 
 					parameterBuilder.setName(symbol);
 					sectionBuilder.addParameter(parameterBuilder);
 					symbolTable.defineSymbol(symbol, ValueDefinition{ ValueDefinition::Position::PARAMETER, inputValue });
@@ -206,13 +206,13 @@ bool SectionConstructor::runOnFunctionReturn(AST* ast, SimpleSection::Builder& s
 				auto symbol = context->getString(ast->children[i]->firstToken.text);
 				switch (i % 3)
 				{
-				case 0: // 返回值类型
+				case 0: // 
 					returnBuilder.createInstance(context);
 					returnBuilder.setType(getTypeObject(ast->children[i].get()));
 					returnValue = returnBuilder.getInstance();
 					success = success && returnValue->getType() != nullptr;
 					break;
-				case 1: // 返回值名称
+				case 1: // 
 					returnBuilder.setName(symbol);
 					symbolTable.defineSymbol(symbol, ValueDefinition{ ValueDefinition::Position::RETURN, returnValue });
 					returnSymbols.push_back(symbol);
@@ -311,7 +311,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 	assert(ast->category == AST::Category::IF_STATEMENT);
 	assertTokenNode(ast->children[0].get(), Token::Category::IF);
 
-	// 分支条件
+	// 
 	bool success = true;
 	auto conditon = getRightValueOperand(ast->children[1].get(), outerBuilder);
 	if (conditon->getType() != context->getLogicType())
@@ -320,7 +320,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 		success = false;
 	}
 
-	// 分支参数
+	// 
 	BinaryBranch::Builder branchBuilder;
 	auto branch = branchBuilder.createInstance(context);
 	auto initial_symbol_meaning_outer = symbolTable.getTopVariable();
@@ -331,7 +331,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, param });
 	}
 
-	// if分支
+	// if
 	assert(ast->children[2]->category == AST::Category::IF_BODY);
 	auto initial_symbol_meaning_branch = symbolTable.getTopVariable();
 	SimpleSection::Builder ifBuilder;
@@ -373,7 +373,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 	auto elseBody = elseBuilder.createInstance(context);
 	if (ast->children[3]->firstToken.category == Token::Category::ELSE)
 	{
-		// else分支
+		// else
 		symbolTable.pushLayer();
 		for (const auto& [symbol, arg] : initial_symbol_meaning_branch)
 		{
@@ -419,7 +419,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 	}
 	else
 	{
-		// 没有else
+		// else
 		assertTokenNode(ast->children[3].get(), Token::Category::END);
 		assertTokenNode(ast->children[4].get(), Token::Category::IF);
 		assert(ast->children.size() == 5);
@@ -429,7 +429,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 		final_symbol_meaning_else = initial_symbol_meaning_branch;
 	}
 
-	// 分支汇合
+	// 
 	std::unordered_map<String, VariableValue*> final_symbol_meaning_branch;
 	for (auto& [symbol, initValue] : initial_symbol_meaning_branch)
 	{
@@ -450,7 +450,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, value });
 	}
 
-	// 分支结束
+	// 
 	BinaryBranch::CallBuilder callBranchBuilder;
 	auto call_branch = callBranchBuilder.createInstance(branch);
 	callBranchBuilder.setCondition(conditon);
@@ -488,7 +488,7 @@ bool SectionConstructor::runOnDoStatement(AST* ast, SimpleSection::Builder& oute
 	assert(ast->children.size() == 8 || ast->children.size() == 9);
 	assertTokenNode(ast->children[0].get(), Token::Category::DO);
 
-	// 循环头
+	// 
 	assert(ast->children[1]->category == AST::Category::LOOP_VARIABLE);
 	assertTokenNode(ast->children[1]->children[0].get(), Token::Category::IDENTIFIER);
 	auto counterName = context->getString(ast->children[1]->firstToken.text);
@@ -509,7 +509,7 @@ bool SectionConstructor::runOnDoStatement(AST* ast, SimpleSection::Builder& oute
 	}
 	bool success = head != nullptr && tail != nullptr && step != nullptr;
 
-	// 循环控制参数
+	// 
 	auto initial_symbol_meaning_outer = symbolTable.getTopVariable();
 	IterateLoop::Builder loopBuilder;
 	auto loop = loopBuilder.createInstance(context);
@@ -521,7 +521,7 @@ bool SectionConstructor::runOnDoStatement(AST* ast, SimpleSection::Builder& oute
 	}
 	symbolTable.defineSymbol(counterName, ValueDefinition{ ValueDefinition::Position::VARIABLE, loop->getCounter()});
 
-	// 循环体参数
+	// 
 	auto initial_symbol_meaning_loop = symbolTable.getTopVariable();
 	SimpleSection::Builder bodyBuilder;
 	auto body = bodyBuilder.createInstance(context);
@@ -532,14 +532,14 @@ bool SectionConstructor::runOnDoStatement(AST* ast, SimpleSection::Builder& oute
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, param });
 	}
 
-	// 循环体
+	// 
 	assert(ast->children[ast->children.size() - 3]->category == AST::Category::LOOP_BODY);
 	SectionCall::Builder callInnerBuilder;
 	callInnerBuilder.createInstance(body);
 	loopBuilder.setBodyCall(callInnerBuilder);
 	runOnSimpleRegionPushLayer(ast->children[ast->children.size() - 3].get(), bodyBuilder);
 
-	// 循环体结果
+	// 
 	std::unordered_map<String, VariableValue*> final_symbol_meaning_loop;
 	for (auto& [symbol, initValue] : initial_symbol_meaning_loop)
 	{
@@ -566,7 +566,7 @@ bool SectionConstructor::runOnDoStatement(AST* ast, SimpleSection::Builder& oute
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, value });
 	}
 
-	// 循环结束
+	// 
 	assertTokenNode(ast->children[ast->children.size() - 2].get(), Token::Category::END);
 	assertTokenNode(ast->children[ast->children.size() - 1].get(), Token::Category::DO);
 	IterateLoop::CallBuilder callLoopBuilder;
@@ -608,7 +608,7 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 	assert(ast->children.size() >= 5);
 	assertTokenNode(ast->children[0].get(), Token::Category::FOR);
 
-	// 循环头
+	// 
 	size_t index = 1;
 	bool success = true;
 	std::vector<String> counterNameVector;
@@ -645,7 +645,7 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 	}
 	assert(index == ast->children.size() - 3);
 		
-	// 循环控制参数
+	// 
 	auto initial_symbol_meaning_outer = symbolTable.getTopVariable();
 	size_t counterNum = index - 1;
 	ParallelLoop::Builder loopBuilder;
@@ -661,7 +661,7 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 		symbolTable.defineSymbol(counterNameVector[i], ValueDefinition{ValueDefinition::Position::VARIABLE, loop->getCounter(i)});
 	}
 
-	// 循环体参数
+	// 
 	auto initial_symbol_meaning_loop = symbolTable.getTopVariable();
 	SimpleSection::Builder bodyBuilder;
 	auto body = bodyBuilder.createInstance(context);
@@ -672,14 +672,14 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, param });
 	}
 
-	// 循环体
+	// 
 	assert(ast->children[ast->children.size() - 3]->category == AST::Category::LOOP_BODY);
 	SectionCall::Builder callInnerBuilder;
 	callInnerBuilder.createInstance(body);
 	loopBuilder.setBodyCall(callInnerBuilder);
 	runOnSimpleRegionPushLayer(ast->children[ast->children.size() - 3].get(), bodyBuilder);
 
-	// 循环体结果
+	// 
 	std::unordered_map<String, VariableValue*> final_symbol_meaning_loop;
 	for (auto& [symbol, initValue] : initial_symbol_meaning_loop)
 	{
@@ -701,7 +701,7 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 		auto arg = final_symbol_meaning_loop.at(param->getName());
 		if (auto phiValue = dynamic_cast<PhiValue*>(arg))
 		{
-			// 并行循环不认为产生循环数据依赖，认为循环体仅依赖输入
+			// 
 			callInnerBuilder.setArgument(param->getIndex(), phiValue->getIncoming(0));
 		}
 		else
@@ -714,7 +714,7 @@ bool SectionConstructor::runOnForStatement(AST* ast, SimpleSection::Builder& out
 		symbolTable.updateSymbol(symbol, ValueDefinition{ ValueDefinition::Position::VARIABLE, value });
 	}
 
-	// 循环结束
+	// 
 	assertTokenNode(ast->children[ast->children.size() - 2].get(), Token::Category::END);
 	assertTokenNode(ast->children[ast->children.size() - 1].get(), Token::Category::FOR);
 	ParallelLoop::CallBuilder callLoopBuilder;
@@ -856,7 +856,7 @@ bool SectionConstructor::runOnAssignStatement(AST* ast, SimpleSection::Builder& 
 	assert(ast->category == AST::Category::ASSIGN_STATEMENT);
 	//assert(ast->children.size() == 3);
 
-	// 获取操作数
+	// 
 	;
 	//auto leftOperand = getLeftValueOperand(ast->children[0].get(), sectionBuilder, leftSymbol, leftValueDefinition);
 	std::vector<String> leftSymbols;
@@ -889,7 +889,7 @@ bool SectionConstructor::runOnAssignStatement(AST* ast, SimpleSection::Builder& 
 		return false;
 	}
 
-	// 匹配Operation
+	// Operation
 	for (size_t i = 0; i < leftOperands.size(); i++)
 	{
 		auto leftOperand = leftOperands[i];
@@ -909,7 +909,7 @@ bool SectionConstructor::runOnAssignStatement(AST* ast, SimpleSection::Builder& 
 		}
 		assert(leftCast == nullptr);
 
-		// 创建OperationValue
+		// OperationValue
 		if (rightCast != nullptr)
 		{
 			rightOperand = sectionBuilder.createOperationValue(rightCast, { rightOperand });
@@ -946,10 +946,10 @@ Value* SectionConstructor::runOnUnaryExpression(AST* ast, SimpleSection::Builder
 {
 	assert(ast->children.size() == 2);
 
-	// 获取操作数
+	// 
 	auto rightOperand = getRightValueOperand(ast->children[1].get(), sectionBuilder);
 
-	// 匹配Operation
+	// Operation
 	if (rightOperand == nullptr)
 	{
 		return nullptr;
@@ -967,7 +967,7 @@ Value* SectionConstructor::runOnUnaryExpression(AST* ast, SimpleSection::Builder
 		return nullptr;
 	}
 
-	// 3.创建OperationValue
+	// 3.OperationValue
 	if (rightCast != nullptr)
 	{
 		rightOperand = sectionBuilder.createOperationValue(rightCast, { rightOperand });
@@ -979,11 +979,11 @@ Value* SectionConstructor::runOnBinaryExpression(AST* ast, SimpleSection::Builde
 {
 	assert(ast->children.size() == 3);
 
-	// 获取操作数
+	// 
 	auto leftOperand = getRightValueOperand(ast->children[0].get(), sectionBuilder);
 	auto rightOperand = getRightValueOperand(ast->children[2].get(), sectionBuilder);
 
-	// 匹配Operation
+	// Operation
 	if (leftOperand == nullptr || rightOperand == nullptr)
 	{
 		return nullptr;
@@ -1000,7 +1000,7 @@ Value* SectionConstructor::runOnBinaryExpression(AST* ast, SimpleSection::Builde
 		return nullptr;
 	}
 
-	// 3.创建OperationValue
+	// 3.OperationValue
 	if (leftCast != nullptr)
 	{
 		leftOperand = sectionBuilder.createOperationValue(leftCast, { leftOperand });
@@ -1026,7 +1026,7 @@ Value* SectionConstructor::runOnSingleReturnCall(AST* ast, SimpleSection::Builde
 	}
 	if (auto def = std::get_if<Type>(&meaning))
 	{
-		// 构造函数
+		// 
 		auto type = getTypeObject(ast->children[0].get());
 		switch (args.size())
 		{
@@ -1036,7 +1036,7 @@ Value* SectionConstructor::runOnSingleReturnCall(AST* ast, SimpleSection::Builde
 			bool isBasicType = false;
 			if (args[0]->getType().canBeArgument(type))
 			{
-				// 相等、继承、协变都可以直接拷贝
+				// 
 				return sectionBuilder.createCopyValue(args[0]);
 			}
 			auto constructOperation = matchBasicTypeConstructor(context, isBasicType,
@@ -1163,7 +1163,7 @@ Value* SectionConstructor::runOnArrayElement(AST* ast, SimpleSection::Builder& s
 		return nullptr;
 	}
 
-	// TODO: 判断下标是整型
+	// TODO: 
 	auto indexVector = getArraySubscript(ast->children[1].get(), sectionBuilder);
 	if (std::find(indexVector.begin(), indexVector.end(), nullptr) != indexVector.end())
 	{
@@ -1231,7 +1231,7 @@ Type SectionConstructor::getTypeObject(AST* ast)
 	}
 	case AST::Category::ARRAY_ELEMENT: {
 		auto elementType = getTypeObject(ast->children[0].get());
-		// TODO: 解析数组每一维长度
+		// TODO: 
 		const auto& dimVector = ast->children[1]->children;
 		auto n = std::accumulate(dimVector.begin(), dimVector.end(), size_t(1), [](size_t n, const std::unique_ptr<AST>& ast) {
 			return n + size_t(ast->firstToken.category == Token::Category::COMMA ? 1 : 0);
@@ -1263,7 +1263,7 @@ Value* SectionConstructor::getLeftValueOperand(AST* ast, SimpleSection::Builder&
 				}
 				else
 				{
-					// 变量
+					// 
 					return def->value;
 				}
 			}
@@ -1305,7 +1305,7 @@ Value* SectionConstructor::getRightValueOperand(AST* ast, SimpleSection::Builder
 			auto meaning = symbolTable.findSymbol(symbol);
 			if (auto def = std::get_if<ValueDefinition>(&meaning))
 			{
-				// 变量或有名字的常量
+				// 
 				if (auto var = dynamic_cast<VariableValue*>(def->value))
 				{
 					return checkClosureParam(var, sectionBuilder, ast->firstToken.line, ast->firstToken.column);
@@ -1321,7 +1321,7 @@ Value* SectionConstructor::getRightValueOperand(AST* ast, SimpleSection::Builder
 				context->getInteger(big_int(ast->firstToken.text)));
 		case Token::Category::DEC_RATIONAL:
 			return context->createConstantValue(
-				context->getRealType(), // TODO: 使用有理数
+				context->getRealType(), // TODO: 
 				context->getDecimal(big_decimal(ast->firstToken.text)));
 		default:
 			assert(false);
@@ -1365,7 +1365,7 @@ Value* SectionConstructor::getFixedValueOperand(AST* ast)
 			{
 				if (def->position == ValueDefinition::Position::CONSTANT)
 				{
-					// 常量
+					// 
 					assert(dynamic_cast<ConstantValue*>(def->value) != nullptr);
 					return def->value;
 				}
@@ -1379,7 +1379,7 @@ Value* SectionConstructor::getFixedValueOperand(AST* ast)
 				context->getInteger(big_int(ast->firstToken.text)));
 		case Token::Category::DEC_RATIONAL:
 			return context->createConstantValue(
-				context->getRealType(), // TODO: 使用有理数
+				context->getRealType(), // TODO: 
 				context->getDecimal(big_decimal(ast->firstToken.text)));
 		default:
 			assert(false);
@@ -1387,7 +1387,7 @@ Value* SectionConstructor::getFixedValueOperand(AST* ast)
 		break;
 	}
 	case AST::Category::RIGHT_VALUE_EXPRESSION: {
-		// 常量折叠
+		// 
 		SimpleSection::Builder sectionBuilder;
 		auto section = sectionBuilder.createInstance(context);
 		auto value = getRightValueOperand(ast, sectionBuilder);
@@ -1596,7 +1596,7 @@ Value* SectionConstructor::checkClosureParam(VariableValue* value, SimpleSection
 	auto meaning = symbolTable.findSymbol(symbol);
 	if (outer_section != inner_section)
 	{
-		// 变量不在当前Section，说明是一个闭包
+		// Section
 		if (auto def = std::get_if<FunctionDefinition>(&meaning))
 		{
 			auto result = def->closureSymbols.try_emplace(value->getName(), inner_section->getParameterVectorSize());

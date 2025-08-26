@@ -29,7 +29,7 @@ AnalyzeRingPass::AnalyzeRingPass()
                     uint32_t j = vertexId(src);
                     ringNormalForms[i].insert(ringNormalForms[i].end(), ringNormalForms[j].begin(), ringNormalForms[j].end());
                 }
-                mergeSameElement(ringNormalForms[i], *this); // 合并同类项
+                mergeSameElement(ringNormalForms[i], *this); // 
                 return true;
             }
             if (op == subOp || op == negOp)
@@ -46,17 +46,17 @@ AnalyzeRingPass::AnalyzeRingPass()
                     uint32_t left = vertexId(srcVector.front());
                     ringNormalForms[i].insert(ringNormalForms[i].begin(), ringNormalForms[left].begin(), ringNormalForms[left].end());
                 }
-                mergeSameElement(ringNormalForms[i], *this); // 合并同类项
+                mergeSameElement(ringNormalForms[i], *this); // 
                 return true;
             }
             if (op == mulOp)
             {
-                ringNormalForms[i] = { { GroupNormalForm{}, op.getContext()->getInteger(1) } }; // 初值是1，不是0
+                ringNormalForms[i] = { { GroupNormalForm{}, op.getContext()->getInteger(1) } }; // 10
                 for (auto src : srcVector)
                 {
                     RingNormalForm dst;
                     uint32_t j = vertexId(src);
-                    // 乘法分配律
+                    // 
                     for (const auto& [term1, coef1] : ringNormalForms[i])
                     {
                         for (const auto& [term2, coef2] : ringNormalForms[j])
@@ -71,7 +71,7 @@ AnalyzeRingPass::AnalyzeRingPass()
                     ringNormalForms[i] = std::move(dst);
                     if (ringNormalForms[i].empty())
                     {
-                        return true; // 0乘任何因式都是0
+                        return true; // 00
                     }
                 }
                 return true;
@@ -178,13 +178,13 @@ ExtractRingShallowPass::ExtractRingShallowPass()
             auto context = value->getContext();
             if (ring.empty())
             {
-                // 零元
+                // 
                 builder.setOperationAndType(context->getCopyOperation(zero->getType()));
                 builder.setSrcVector({ zero });
             }
             else if (ring.size() == 1)
             {
-                // 仅一个项
+                // 
                 const auto& term = ring[0].first;
                 const auto& coef = ring[0].second;
                 if (coef.getData() == 1)
@@ -195,7 +195,7 @@ ExtractRingShallowPass::ExtractRingShallowPass()
                         const auto& exponent = term[0].second;
                         if (exponent.getData() == 1 && factor == value)
                         {
-                            // 标准型等于自身
+                            // 
                             for (size_t i = 0; i < value->getSrcVectorSize(); i++)
                             {
                                 builder.setSrc(i, mapValue(value->getSrc(i)));
@@ -203,19 +203,19 @@ ExtractRingShallowPass::ExtractRingShallowPass()
                         }
                         else
                         {
-                            // 仅一个因子
+                            // 
                             createFactor(context, *this, factor, exponent, builder, powOp);
                         }
                     }
                     else
                     {
-                        // 多个因子相乘
+                        // 
                         createTerm(context, simpleSectionBuilder, term, context->getInteger(1), builder, powOp, mulOp, negOp, scaOp);
                     }
                 }
                 else
                 {
-                    // 多个因子相乘，系数不为1
+                    // 1
                     createTerm(context, simpleSectionBuilder, term, coef, builder, powOp, mulOp, negOp, scaOp);
                 }
             }
@@ -271,21 +271,21 @@ Value* ExtractRingShallowPass::createTerm(Context* context, SimpleSection::Build
     {
         if (term.empty())
         {
-            // 常量数乘单位元
+            // 
             builder.setOperationAndType(scaOp);
             auto times = context->createConstantValue(context->getIntegerType(), coef);
             builder.setSrcVector({ times, one });
         }
         else if (term.size() == 1)
         {
-            // 仅一个因子
+            // 
             const auto& factor = term[0].first;
             const auto& exponent = term[0].second;
             createFactor(context, *this, factor, exponent, builder, powOp);
         }
         else
         {
-            // 多个因子相乘
+            // 
             builder.setOperationAndType(context->getOperation(mulOp.getName(),
                 std::vector<Type>(term.size(), elemType), addOp.getReturnType()));
             builder.setSrcVectorSize(term.size());

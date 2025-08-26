@@ -51,7 +51,7 @@ RETURN_ID: {
 	default: {
 		auto message = readToken().isKeyword() ? 
 			"Keywords as return variable name when parsing function defs" : //"In function defination: using keywords as return value name" 
-			"Return variable name not found when parsing function defs"; //"In function defination: return value not found名"
+			"Return variable name not found when parsing function defs"; //"In function defination: return value not found"
 		ERROR(message);
 	}
 	}

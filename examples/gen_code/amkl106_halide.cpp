@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     const int y_min = 0;
     const int y_max = _2D_2;
     
-    // amkl106的数组维度：所有数组都是 (x_min-2:x_max+3, y_min-2:y_max+3)
+    // amkl106 (x_min-2:x_max+3, y_min-2:y_max+3)
     const int array_x_size = (x_max + 3) - (x_min - 2) + 1;
     const int array_y_size = (y_max + 3) - (y_min - 2) + 1;
     

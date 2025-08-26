@@ -174,7 +174,7 @@ void CopySectionShallowPass::createSectionBuilders()
 			sectionBuilder.copySectionName(section);
 			sectionResultVector[i] = sectionBuilder.getInstance();
 
-			// 如果是SectionGenerator，则存在初始的子调用，提前按正确顺序初始化
+			// SectionGenerator
 			size_t call_num = sectionBuilder.getInstance()->getSectionCallVectorSize();
 			for (size_t i = 0; i < call_num; i++)
 			{

@@ -2,14 +2,14 @@
 
 /**
  * @file Symbol.h
- * @brief 使用享元模式定义符号计算所使用的数据结构基类
+ * @brief 
  */
 
 #include "FlyweightObject.h"
 
 #include <string>
 
-/// 符号（抽象类），是符号计算所使用的基类
+/// 
 class Symbol : public FlyweightObject
 {
 protected:
@@ -26,11 +26,11 @@ protected:
 public:
 	Symbol(Impl* impl_ptr = nullptr) : FlyweightObject(impl_ptr) {}
 
-	/// 动态转换到某个子类，在子类中通过偏特化定义
+	/// 
 	template<typename T>
 	T cast() const;
 
-	/// 获取字符串，用于输出与调试
+	/// 
 	std::string toString() const { return getImpl().toString(); }
 };
 

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-// VCG: Verifiable Computational Graph（可验证的计算图）
+// VCG: Verifiable Computational Graph
 
 #ifdef _WIN32
 

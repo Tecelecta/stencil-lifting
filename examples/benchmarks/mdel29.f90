@@ -15,7 +15,7 @@ SUBROUTINE meso_length_scale( elb, elf, &
     REAL(kind=8) :: g = 9.81  ! acceleration due to gravity (m {s}^-2)
 
     gtr  = g/300.  
-! -----------------------------------赋初值
+! -----------------------------------
     ! DO j = jts, jte
     !     DO k = kts+1, kte-1
     !     DO i = its, ite
@@ -55,7 +55,7 @@ SUBROUTINE meso_length_scale( elb, elf, &
     !             ENDDO
     !    ENDDO        
        
-!--------赋值结束，下面是kernel-----------------------------------
+!--------kernel-----------------------------------
 
 !-------Length scale limited by bouyancy effect-----    
 DO j = jts, jte

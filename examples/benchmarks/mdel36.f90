@@ -3,7 +3,7 @@ SUBROUTINE cal_helicity ( uh, ph, phb, ht, wavg, rvort, &
 
   IMPLICIT NONE
   INTEGER :: its, ite, jts, jte, kts, kte 
-!--------需要初始化的数组----------------------------
+!------------------------------------
 REAL(kind=8), DIMENSION( its-1:ite, kts:kte+1, jts-1:jte ) :: ph, phb ! in 8p*2
 REAL(kind=8), DIMENSION( its-1:ite, jts-1:jte ) :: ht ! in 4P
 REAL(kind=8), DIMENSION( its:ite, kts:kte+1, jts:jte ) :: wavg, rvort ! in 2p*2

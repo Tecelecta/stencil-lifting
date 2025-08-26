@@ -386,7 +386,7 @@ bool SummaryIterativeSearcher::runOnTypical(const vertex_list& scc)
         scc_count++;
     }
 
-    // 迭代搜索
+    // 
     bool success = false;
     for (size_t step = 1; step <= 100; step++)
     {
@@ -1017,7 +1017,7 @@ Summary SummaryIterativeSearcher::getPostCond(const Summary& invar)
                 if (src.size()>0)
                 {
                     ind.func = ind.func.substitute(src, dst).simplify();
-                    // TODO: 无效替换，因为cond、elem里面没有x
+                    // TODO: condelemx
                     cond = cond.substitute(src, dst).simplify();
                     elem = elem.substitute(src, dst).simplify();
                 }

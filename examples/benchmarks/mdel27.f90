@@ -22,7 +22,7 @@ SUBROUTINE meso_length_scale(dthrdn, &
   INTEGER :: i, k, j
   REAL(kind=8) :: tmpdz, thetasfc, thetatop
 
-  DO j = jts, jte  !2518 to 展示边界的处理
+  DO j = jts, jte  !2518 to 
   DO k = kts+1, kte-1
   DO i = its, ite
     tmpdz         = 1.0 / rdz(i,k+1,j) + 1.0 / rdz(i,k,j)

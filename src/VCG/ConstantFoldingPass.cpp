@@ -10,7 +10,7 @@ ConstantFoldingShallowPass::ConstantFoldingShallowPass()
 			{
 				if (auto selector = dynamic_cast<ConstantValue*>(mapValue(value->getSrc(0))))
 				{
-					// 常量选择子
+					// 
 					valueResultVector[i] = mapValue(value->getSrc(getSelectedOperand(selector)));
 					return;
 				}
@@ -32,7 +32,7 @@ ConstantFoldingShallowPass::ConstantFoldingShallowPass()
 					return;
 				}
 			}
-			// 折叠常量表达式
+			// 
 			valueResultVector[i] = tryEvaluate(value->getContext(), value->getOperation(), value->getName(), srcVector_numeral);
 			if (valueResultVector[i] == nullptr)
 			{
@@ -59,8 +59,8 @@ bool ConstantFoldingShallowPass::runOnTrivial(uint32_t i)
 
 bool ConstantFoldingShallowPass::runOnTypical(const vertex_list& scc)
 {
-	// 常量表达式不可能构成非平凡强连通分量
-	// 常量次数的循环先进行循环展开
+	// 
+	// 
 	for (auto i : scc)
 	{
 		if (vertexFilter.empty() || vertexFilter.at(i))

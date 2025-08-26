@@ -148,14 +148,14 @@ private:
 	std::unordered_set<uint32_t, InvalidValueHasher, InvalidValueEqualTo> equSetInvalidValue;
 };
 
-/// 公共子表达式删除优化（浅层次）
+/// 
 class CommonSubexprEliminationShallowPass : public CopySectionShallowPass, protected AnalyzeCommonSubexprPass
 {
 public:
 	VCG_API GraphOuterSection run(GraphOuterSection src) override;
 };
 
-/// 公共子表达式删除优化（深层次）
+/// 
 class CommonSubexprEliminationDeepPass : public CopySectionDeepPass
 {
 protected:

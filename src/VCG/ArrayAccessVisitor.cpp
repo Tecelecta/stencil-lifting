@@ -49,7 +49,7 @@ ArrayIndexVisitor::ArrayIndexVisitor()
 				auto func_iter = evaluate.find(op.getName().view());
 				if (func_iter != evaluate.end())
 				{
-					// 调用成员函数指针
+					// 
 					(this->*func_iter->second)(value, dst_vertex);
 				}
 			}
@@ -95,7 +95,7 @@ ArrayAccessVisitor::ArrayAccessVisitor()
 				auto func_iter = evaluate.find(op.getName().view());
 				if (func_iter != evaluate.end())
 				{
-					// 调用成员函数指针
+					// 
 					(this->*func_iter->second)(value, dst_vertex);
 				}
 			}

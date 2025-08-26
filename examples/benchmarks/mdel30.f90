@@ -21,7 +21,7 @@ SUBROUTINE meso_length_scale(els, &
     REAL(kind=8) :: coe
     INTEGER :: i, k, j
 
-    ! 局部变量的初始赋值
+    ! 
     ! DO  j = jts, jte
     !   DO  i = its, ite
     !       zfull(i,kts,j) = 0.
@@ -44,7 +44,7 @@ SUBROUTINE meso_length_scale(els, &
     !   ENDDO
     ! ENDDO
 
-      !赋值结束，kernel开始
+      !kernel
     DO j = jts, jte
       DO k = kts, kte
         DO i = its,ite
