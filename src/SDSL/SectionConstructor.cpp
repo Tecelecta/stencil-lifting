@@ -316,7 +316,7 @@ bool SectionConstructor::runOnIfStatement(AST* ast, SimpleSection::Builder& oute
 	auto conditon = getRightValueOperand(ast->children[1].get(), outerBuilder);
 	if (conditon->getType() != context->getLogicType())
 	{
-		errorHandler.error("分支条件必须是Logic类型", ast->children[1]->firstToken.line, ast->children[1]->firstToken.column);
+		errorHandler.error("Branching condition must be Logic type", ast->children[1]->firstToken.line, ast->children[1]->firstToken.column);
 		success = false;
 	}
 
@@ -760,7 +760,7 @@ bool SectionConstructor::runOnVariableDefinition(AST* ast, SimpleSection::Builde
 	auto initValue = getRightValueOperand(ast->children[3].get(), sectionBuilder);
 	if (initValue == nullptr)
 	{
-		errorHandler.info("变量 " + symbol.str() + " 初值无效", ast->children[3]->firstToken.line, ast->children[3]->firstToken.column);
+		errorHandler.info("Duplicated defination of variable `" + symbol.str() + "`: invalid initialization", ast->children[3]->firstToken.line, ast->children[3]->firstToken.column);
 		return false;
 	}
 	auto copyValue = sectionBuilder.createCopyValue(initValue, symbol);
@@ -781,7 +781,7 @@ bool SectionConstructor::runOnConstantDefinition(AST* ast)
 	auto constantValue = dynamic_cast<ConstantValue*>(getFixedValueOperand(ast->children[3].get()));
 	if (constantValue == nullptr)
 	{
-		errorHandler.info("常量 " + symbol.str() + " 赋值无效", ast->children[3]->firstToken.line, ast->children[3]->firstToken.column);
+		errorHandler.info("Assigment of constant `" + symbol.str() + " is invalid", ast->children[3]->firstToken.line, ast->children[3]->firstToken.column);
 		return false;
 	}
 	else
@@ -836,7 +836,7 @@ bool SectionConstructor::runOnStructBody(AST* ast, StructDefinition& def)
 			auto initValue = getFixedValueOperand(child->children[3].get());
 			if (initValue == nullptr)
 			{
-				errorHandler.info("结构体成员 " + symbol.str() + " 初值无效", child->children[3]->firstToken.line, child->children[3]->firstToken.column);
+				errorHandler.info("Initialization of structure member `" + symbol.str() + "`: invalid initialization", child->children[3]->firstToken.line, child->children[3]->firstToken.column);
 				success = false;
 			}
 			def.elemNames.push_back(context->getString(child->children[1]->firstToken.text));
@@ -844,7 +844,7 @@ bool SectionConstructor::runOnStructBody(AST* ast, StructDefinition& def)
 		}
 		else
 		{
-			errorHandler.error("此处应为结构体成员定义", child->firstToken.line, child->firstToken.column);
+			errorHandler.error("Expecting structure member defination", child->firstToken.line, child->firstToken.column);
 			success = false;
 		}
 	}
@@ -1056,7 +1056,7 @@ Value* SectionConstructor::runOnSingleReturnCall(AST* ast, SimpleSection::Builde
 	{
 		if (def->returnValues.size() != 1)
 		{
-			errorHandler.error("函数 " + symbol.str() + " 不是一个返回值", ast->firstToken.line, ast->firstToken.column);
+			errorHandler.error("Function `" + symbol.str() + " is not a return value", ast->firstToken.line, ast->firstToken.column);
 			return nullptr;
 		}
 		auto returnValue = def->returnValues.front();
@@ -1075,7 +1075,7 @@ Value* SectionConstructor::runOnSingleReturnCall(AST* ast, SimpleSection::Builde
 				}
 				else
 				{
-					errorHandler.error("实参与形参类型不匹配", ast->firstToken.line, ast->firstToken.column);
+					errorHandler.error("Mismatch between argument type and parameter type", ast->firstToken.line, ast->firstToken.column);
 					return nullptr;
 				}
 			}
@@ -1100,7 +1100,7 @@ Value* SectionConstructor::runOnSingleReturnCall(AST* ast, SimpleSection::Builde
 			return sectionBuilder.createOperationValue(op, args);
 		}
 	}
-	errorHandler.error("符号 " + symbol.str() + " 不是函数", ast->firstToken.line, ast->firstToken.column);
+	errorHandler.error("Symbol `" + symbol.str() + "` is not a function", ast->firstToken.line, ast->firstToken.column);
 	return nullptr;
 }
 
@@ -1137,7 +1137,7 @@ std::vector<Value*> SectionConstructor::runOnMultipleReturnCall(AST* ast, Simple
 		}
 		return returnValues;
 	}
-	errorHandler.error("符号 " + symbol.str() + " 不是函数", ast->firstToken.line, ast->firstToken.column);
+	errorHandler.error("Symbol `" + symbol.str() + "` is not a function", ast->firstToken.line, ast->firstToken.column);
 	return {};
 }
 
@@ -1159,7 +1159,7 @@ Value* SectionConstructor::runOnArrayElement(AST* ast, SimpleSection::Builder& s
 	auto baseType = baseValue->getType().cast<ArrayType>();
 	if (baseType == nullptr)
 	{
-		errorHandler.error("非数组类型不能进行下标访问", ast->firstToken.line, ast->firstToken.column);
+		errorHandler.error("Subscribing non-array type", ast->firstToken.line, ast->firstToken.column);
 		return nullptr;
 	}
 
@@ -1167,7 +1167,7 @@ Value* SectionConstructor::runOnArrayElement(AST* ast, SimpleSection::Builder& s
 	auto indexVector = getArraySubscript(ast->children[1].get(), sectionBuilder);
 	if (std::find(indexVector.begin(), indexVector.end(), nullptr) != indexVector.end())
 	{
-		errorHandler.info("数组下标无效", ast->firstToken.line, ast->firstToken.column);
+		errorHandler.info("Invalid array index", ast->firstToken.line, ast->firstToken.column);
 		return nullptr;
 	}
 	return sectionBuilder.createArrayGetValue(baseValue, indexVector);
@@ -1192,7 +1192,7 @@ Value* SectionConstructor::runOnStructElement(AST* ast, SimpleSection::Builder& 
 	auto baseType = baseValue->getType().cast<StructType>();
 	if (baseType == nullptr)
 	{
-		errorHandler.error("非结构体类型不能进行成员访问", ast->firstToken.line, ast->firstToken.column);
+		errorHandler.error("Accessing member of non-structuer type", ast->firstToken.line, ast->firstToken.column);
 		return nullptr;
 	}
 
@@ -1200,7 +1200,7 @@ Value* SectionConstructor::runOnStructElement(AST* ast, SimpleSection::Builder& 
 	auto result = sectionBuilder.createStructGetValue(baseValue, elem);
 	if (result == nullptr)
 	{
-		errorHandler.error(std::string("找不到成员") + elem.str(), ast->children[2]->firstToken.line, ast->children[2]->firstToken.column);
+		errorHandler.error(std::string("Member not found") + elem.str(), ast->children[2]->firstToken.line, ast->children[2]->firstToken.column);
 	}
 	return result;
 }
@@ -1226,7 +1226,7 @@ Type SectionConstructor::getTypeObject(AST* ast)
 		{
 			return p->type;
 		}
-		errorHandler.error("符号 " + std::string(ast->firstToken.text) +  " 不是类型名", ast->firstToken.line, ast->firstToken.column);
+		errorHandler.error("Symbol `" + std::string(ast->firstToken.text) +  "` is not a type name", ast->firstToken.line, ast->firstToken.column);
 		return Type();
 	}
 	case AST::Category::ARRAY_ELEMENT: {
@@ -1259,7 +1259,7 @@ Value* SectionConstructor::getLeftValueOperand(AST* ast, SimpleSection::Builder&
 				valueDefinition = *def;
 				if (valueDefinition.position == ValueDefinition::Position::CONSTANT)
 				{
-					errorHandler.error("常量不能被再次赋值", ast->firstToken.line, ast->firstToken.column);
+					errorHandler.error("Assigning constant", ast->firstToken.line, ast->firstToken.column);
 				}
 				else
 				{
@@ -1267,7 +1267,7 @@ Value* SectionConstructor::getLeftValueOperand(AST* ast, SimpleSection::Builder&
 					return def->value;
 				}
 			}
-			errorHandler.error("符号 " + symbol.str() + " 不是变量", ast->firstToken.line, ast->firstToken.column);
+			errorHandler.error("Symbol `" + symbol.str() + " is not a variable", ast->firstToken.line, ast->firstToken.column);
 			break;
 		}
 		default:
@@ -1312,7 +1312,7 @@ Value* SectionConstructor::getRightValueOperand(AST* ast, SimpleSection::Builder
 				}
 				return def->value;
 			}
-			errorHandler.error("符号 " + symbol.str() + " 不是变量或常量", ast->firstToken.line, ast->firstToken.column);
+			errorHandler.error("Symbol `" + symbol.str() + "` is not constant or variable", ast->firstToken.line, ast->firstToken.column);
 			break;
 		}
 		case Token::Category::DEC_INTEGER:
@@ -1370,7 +1370,7 @@ Value* SectionConstructor::getFixedValueOperand(AST* ast)
 					return def->value;
 				}
 			}
-			errorHandler.error("符号 " + symbol.str() + " 不是常量", ast->firstToken.line, ast->firstToken.column);
+			errorHandler.error("Symbol `" + symbol.str() + " is not constant", ast->firstToken.line, ast->firstToken.column);
 			break;
 		}
 		case Token::Category::DEC_INTEGER:
@@ -1524,7 +1524,7 @@ Value* SectionConstructor::getTimesVariable(Value* head, Value* tail, Value* ste
 		step_value = step_numeral->getValue<Integer>();
 		if (step_value.sign() == 0)
 		{
-			errorHandler.error("循环步长不能为0");
+			errorHandler.error("stride");
 			return nullptr;
 		}
 		if (auto head_numeral = dynamic_cast<ConstantValue*>(head))
@@ -1583,7 +1583,7 @@ void SectionConstructor::checkRedefinition(String symbol, size_t line, size_t co
 		auto meaning = symbolTable.findSymbol(symbol, layer);
 		if (meaning.index() != 0 && layer == symbolTable.getCurrentLayer())
 		{
-			errorHandler.error("变量 " + symbol.str() + " 重复定义", line, column);
+			errorHandler.error("Duplicated defination of variable `" + symbol.str() + "`", line, column);
 		}
 	}
 }
@@ -1616,7 +1616,7 @@ Value* SectionConstructor::checkClosureParam(VariableValue* value, SimpleSection
 			symbolTable.updateSymbol(symbol, meaning);
 			return param;
 		}
-		errorHandler.error("闭包必须是函数", line, column);
+		errorHandler.error("Closure must be function", line, column);
 		return nullptr;
 	}
 	return value;

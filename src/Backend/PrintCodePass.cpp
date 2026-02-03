@@ -48,7 +48,7 @@ void PrintProcedurePass::run(GraphOuterSection src)
 	nextSubgraph = 0;
 	if (!iterateSCC(*this))
 	{
-		throw std::runtime_error("无法生成目标代码");
+		throw std::runtime_error("Unable to generate target code");
 	}
 	printActionVector.push_back({ ActionType::TAIL, getSubgraphNum() - 1 });
 	for (const auto& action : printActionVector)

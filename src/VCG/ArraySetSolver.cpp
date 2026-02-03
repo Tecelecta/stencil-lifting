@@ -1,4 +1,4 @@
-﻿#include "ArraySetSolver.h"
+#include "ArraySetSolver.h"
 
 ArraySetSolver::ArraySetSolver(z3::context& z3ctx, z3::expr times, size_t numDims, Summary summary)
 	: z3ctx(z3ctx), w(getArrayBound(z3ctx, numDims)),
@@ -13,11 +13,6 @@ ArraySetSolver::ArraySetSolver(z3::context& z3ctx, z3::expr times, size_t numDim
 	dst_0.push_back(z3ctx.int_val(0));
 	dst_1.push_back(z3ctx.int_val(1));
 	dst_times.push_back(times);
-}
-
-static bool has(const z3::expr& expr, const std::string& key)
-{
-	return expr.to_string().find(key) != std::string::npos;
 }
 
 static z3::expr find_w_bound(z3::expr expr, z3::expr key, bool is_ub, bool dft = false)
@@ -158,7 +153,21 @@ static z3::expr __rcw(z3::expr src)
 	default:
 		assert(false);
 	}
+}
 
+static void find_param(const z3::expr& e, z3::expr_vector& res)
+{
+    if ( e.is_const() && has(e, "s_") )
+    {
+        res.push_back(e);
+    }
+    else
+    {
+        for ( auto arg: e.args() )
+        {
+            find_param(arg, res);
+        }
+    }
 }
 
 static z3::expr remove_comparison_with(z3::expr src, const z3::expr pat)
@@ -172,7 +181,7 @@ static z3::expr remove_comparison_with(z3::expr src, const z3::expr pat)
 	return __rcw(tmp);
 }
 
-bool ArraySetSolver::tryBypassTiling()
+bool ArraySetSolver::tryBypassTiling(const z3::expr it_times)
 {
 	bool bypass = true;
 	int tiled_dim=-1;
@@ -195,18 +204,21 @@ bool ArraySetSolver::tryBypassTiling()
 		// replace `t` with expr of `tm-1` and `0` in cond
 		for (auto& br : summary.branches)
 		{
-			//std::stringstream ss;
-			//ss << "tiled_" << tiled_dim;
 			z3::expr_vector tile_dst(z3ctx);
-			tile_dst.push_back(t.ctx().int_const("tm") - 1);
-			//br.cond = simplifyUseTactic(br.cond.substitute(v_t, tile_dst));
+			// tile_dst.push_back((it_times - 1).simplify());
 			
-			auto lb_cond = find_w_bound(br.cond, w[tiled_dim], false).substitute(v_t, dst_0);
-			auto ub_cond = find_w_bound(br.cond, w[tiled_dim], true).substitute(v_t, tile_dst);
-			br.cond = simplifyUseTactic(remove_comparison_with(br.cond, t) && ub_cond && lb_cond);
+			// auto lb_cond = find_w_bound(br.cond, w[tiled_dim], false).substitute(v_t, dst_0);
+			// auto ub_cond = find_w_bound(br.cond, w[tiled_dim], true).substitute(v_t, tile_dst);
+			// br.cond = simplifyUseTactic(remove_comparison_with(br.cond, t) && ub_cond && lb_cond);
+
+			z3::expr_vector tile_src(z3ctx);
+			std::stringstream ss;
+			ss << "b_" << tiled_dim+1;
+			tile_src.push_back(w[tiled_dim]);
+			tile_dst.push_back(z3ctx.int_const(ss.str().c_str()));
+			br.cond = simplifyUseTactic(br.cond.substitute(tile_src, tile_dst));
 		}
 	}
-
 	return bypass;
 }
 
@@ -266,7 +278,27 @@ bool ArraySetSolver::solve()
 #endif // _DEBUG
 		if (writeConds[i].hasSkolem)
 		{
-			branch.skolem_x = writeConds[i].skolemFunc;
+            /// TODO: assert params only exsist in offset
+            branch.skolem_x = writeConds[i].skolemFunc;
+            
+//            z3::expr_vector params(z3ctx), z_dst(z3ctx), w_src(z3ctx), w_dst(z3ctx);
+//            find_param(skolem_x, params);
+//            if (params.size()>0)
+//            {
+//                for ( auto p: params  ) z_dst.push_back(z3ctx.int_val(0));
+//                auto sx_no_param = skolem_x.substitute(params, z_dst).simplify();
+//                auto str = skolem_x.to_string();
+//                int dim = std::stoi(str.substr(str.find("w_") + 2, 2)) - 1;
+//                branch.restore_w = {dim, (w[dim] + sx_no_param - skolem_x).simplify()};
+//            }
+
+            for (int j=0; j<branch.index.size(); j++)
+            {
+                if(!writeConds[i].potential_tiling[j].is_false())
+                {
+                    branch.index[j].restore_w = writeConds[i].potential_tiling[j];
+                }
+            }
 		}
 	}
 	return true;
@@ -300,10 +332,12 @@ void ArraySetSolver::solveAffineAndSkolem(ArrayWriteCond& write)
 		z3::expr scale(z3ctx);
 		z3::expr offset(z3ctx);
 		bool isAffine, isConstant;
+        bool restore_w_filled = false;
 		solveAffine(write.index[i], v_x, dst_0, dst_1, scale, offset, isAffine, isConstant);
 		if (isAffine)
 		{
 			write.hasAffine = true;
+            z3::expr_vector params(z3ctx), z_dst(z3ctx), w_src(z3ctx), w_dst(z3ctx);
 			if (!isConstant)
 			{
 				write.allConstant = false;
@@ -316,9 +350,47 @@ void ArraySetSolver::solveAffineAndSkolem(ArrayWriteCond& write)
 					std::cout << "skolemFunc:\n" << write.skolemFunc << std::endl;
 					std::cout << "skolemCond:\n" << write.skolemCond << std::endl;
 #endif // _DEBUG
+                    find_param(offset, params);
+                    if (params.size()>0)
+                    {
+                        for ( auto p: params ) z_dst.push_back(z3ctx.int_val(0));
+                        auto sx_no_param = offset.substitute(params, z_dst).simplify();
+                        write.potential_tiling.push_back((w[i] + offset - sx_no_param).simplify());
+                        restore_w_filled = true;
+                    }
 				}
 			}
+            else
+            {
+                auto wi = write.index[i];
+                if (has(wi, "b_"))
+                {
+                    z3::expr_vector v_b(z3ctx);
+                    auto bound_i = find_const_subexpr(wi, "b_");
+                    v_b.push_back(bound_i);
+                    solveAffine(wi, v_b, dst_0, dst_1, scale, offset, isAffine, isConstant);
+                    if(!isAffine && !isConstant)
+                    {
+                        int step = searchNonUnitStep(wi);
+                        if (step > 1)
+                            sovleNonUnitAffine(wi, v_b, scale, offset, isAffine, isConstant, step);
+                    }
+                    assert(isAffine && !isConstant);
+                    find_param(offset, params);
+                    if (params.size()>0)
+                    {
+                        for ( auto p: params ) z_dst.push_back(z3ctx.int_val(0));
+                        auto no_param = offset.substitute(params, z_dst).simplify();
+                        write.potential_tiling.push_back((w[i] + offset - no_param).simplify());
+                        restore_w_filled = true;
+                    }
+                }
+            }
 		}
+        if (!restore_w_filled)
+        {
+            write.potential_tiling.push_back(z3ctx.bool_val(false));
+        }
 	}
 	if (write.allConstant)
 	{
@@ -396,4 +468,16 @@ bool ArraySetSolver::solveValidCond(ArrayWriteCond& write)
 		return true;
 	}
 	return false;
+}
+
+bool ArrayWriteCond::hasPotentialTiling()
+{
+    for (const auto& expr : potential_tiling)
+    {
+        if(expr.is_int())
+        {
+            return true;
+        }
+    }
+    return false;
 }

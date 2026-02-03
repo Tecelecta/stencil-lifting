@@ -75,7 +75,7 @@ void Graph::subgraphTopologicalSort(vertex_mapping& f)
 	{
 		if (!isTrivialSCC(subgraphSccVector[i], calleeVector))
 		{
-			throw std::runtime_error("不允许递归");
+			throw std::runtime_error("Recusion is not supported");
 		}
 		f[subgraphSccVector[i].front()] = i;
 	}
@@ -195,7 +195,7 @@ void GraphNoCallPath::validate() const
 	{
 		if (value == nullptr)
 		{
-			throw std::runtime_error("value不能是nullptr");
+			throw std::runtime_error("value cannot be nullptr");
 		}
 	}
 }
@@ -583,7 +583,7 @@ void GraphCallPath::validate() const
 	{
 		if (path.value == nullptr)
 		{
-			throw std::runtime_error("value不能是nullptr");
+			throw std::runtime_error("value cannot be nullptr");
 		}
 	}
 }

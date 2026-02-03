@@ -1,0 +1,16 @@
+SUBROUTINE mg_loop18(n1,n2,n3,z)
+INTEGER :: i1
+INTEGER :: i2
+INTEGER :: i3
+INTEGER :: n1
+INTEGER :: n2
+INTEGER :: n3
+DOUBLE PRECISION, DIMENSION(n1,n2,n3) :: z
+DO i3 = 1, n3
+DO i2 = 1, n2
+DO i1 = 1, n1
+z(i1,i2,i3) = 0.0D0
+END DO
+END DO
+END DO
+END SUBROUTINE 

@@ -1,0 +1,506 @@
+{
+  "akl81": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 14944.0
+  },
+  "akl83": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 683.0
+  },
+  "akl84": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 631.0
+  },
+  "akl85": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 662.0
+  },
+  "akl86": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 919.0
+  },
+  "ackl95": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 2,
+    "time": 1088.0
+  },
+  "amkl100": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 2,
+    "time": 1512.0
+  },
+  "amkl101": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 1273.0
+  },
+  "amkl103": {
+    "dim": 2,
+    "pt": 5,
+    "nout": 1,
+    "time": 176.0
+  },
+  "amkl105": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": 707.0
+  },
+  "amkl107": {
+    "dim": 2,
+    "pt": 5,
+    "nout": 1,
+    "time": 133.0
+  },
+  "amkl97": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": 4099.0
+  },
+  "amkl98": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": 4191.0
+  },
+  "amkl99": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 2,
+    "time": 1736.0
+  },
+  "fckl89": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 1,
+    "time": 425.0
+  },
+  "fckl90": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 1,
+    "time": 131.0
+  },
+  "gckl77": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 7.0
+  },
+  "gckl78": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 8.0
+  },
+  "gckl79": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 6.0
+  },
+  "gckl80": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 7.0
+  },
+  "ickl10": {
+    "dim": 1,
+    "pt": 2,
+    "nout": 1,
+    "time": 2.0
+  },
+  "ickl11": {
+    "dim": 1,
+    "pt": 1,
+    "nout": 1,
+    "time": 1.0
+  },
+  "ickl12": {
+    "dim": 1,
+    "pt": 2,
+    "nout": 1,
+    "time": 1.0
+  },
+  "ickl13": {
+    "dim": 1,
+    "pt": 1,
+    "nout": 1,
+    "time": 1.0
+  },
+  "ickl14": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 1,
+    "time": 5.0
+  },
+  "ickl15": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 13.0
+  },
+  "ickl16": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 7.0
+  },
+  "ickl8": {
+    "dim": 1,
+    "pt": 1,
+    "nout": 1,
+    "time": 1.0
+  },
+  "ickl9": {
+    "dim": 1,
+    "pt": 1,
+    "nout": 1,
+    "time": 1.0
+  },
+  "rfkl109": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 6.0
+  },
+  "rfkl110": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 5.0
+  },
+  "rfkl111": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 6.0
+  },
+  "rfkl112": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 7.0
+  },
+  "ackl91": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": 6361.0
+  },
+  "ackl92": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 2,
+    "time": 1542.0
+  },
+  "ackl94": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": 4273.0
+  },
+  "ackl102": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 6,
+    "time": 9153.0
+  },
+  "ackl106": {
+    "dim": 2,
+    "pt": 2,
+    "nout": 6,
+    "time": 5546.0
+  },
+  "rkl87": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 5.0
+  },
+  "rkl88": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": 5.0
+  },
+  "mgl15": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 1,
+    "time": 8.0
+  },
+  "mgl18": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 1,
+    "time": 7.0
+  },
+  "mgl5": {
+    "dim": 3,
+    "pt": 19,
+    "nout": 1,
+    "time": 46422.0
+  },
+  "div": {
+    "dim": 3,
+    "pt": 7,
+    "nout": 1,
+    "time": 6590.0
+  },
+  "heat": {
+    "dim": 3,
+    "pt": 7,
+    "nout": 1,
+    "time": 4668.0
+  },
+  "grad": {
+    "dim": 3,
+    "pt": 7,
+    "nout": 3,
+    "time": 18557.0
+  },
+  "ackl93": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": null
+  },
+  "ackl96": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 2,
+    "time": null
+  },
+  "amkl102": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "amkl104": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  },
+  "amkl106": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "amkl108": {
+    "dim": 2,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  },
+  "cdkl": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": null
+  },
+  "igkl": {
+    "dim": 2,
+    "pt": 1,
+    "nout": 1,
+    "time": null
+  },
+  "pdvk1": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "pdvk2": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "viscosity": {
+    "dim": 2,
+    "pt": 4,
+    "nout": 1,
+    "time": null
+  },
+  "mdel9": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 1,
+    "time": null
+  },
+  "mdel24": {
+    "dim": 3,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "mdel26": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 1,
+    "time": null
+  },
+  "mdel27": {
+    "dim": 3,
+    "pt": 2,
+    "nout": 1,
+    "time": null
+  },
+  "mdel29": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 2,
+    "time": null
+  },
+  "mdel30": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 1,
+    "time": null
+  },
+  "mdel33": {
+    "dim": 3,
+    "pt": 11,
+    "nout": 4,
+    "time": null
+  },
+  "mdel34": {
+    "dim": 3,
+    "pt": 2,
+    "nout": 1,
+    "time": null
+  },
+  "mdel35": {
+    "dim": 3,
+    "pt": 14,
+    "nout": 1,
+    "time": null
+  },
+  "mdel36": {
+    "dim": 3,
+    "pt": 8,
+    "nout": 1,
+    "time": null
+  },
+  "mbel10": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 2,
+    "time": null
+  },
+  "mbel16": {
+    "dim": 3,
+    "pt": 1,
+    "nout": 2,
+    "time": null
+  },
+  "miel3": {
+    "dim": 3,
+    "pt": 4,
+    "nout": 2,
+    "time": null
+  },
+  "miel10": {
+    "dim": 3,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  },
+  "miel11": {
+    "dim": 3,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  },
+  "miel12": {
+    "dim": 3,
+    "pt": 4,
+    "nout": 1,
+    "time": null
+  },
+  "miel13": {
+    "dim": 3,
+    "pt": 4,
+    "nout": 1,
+    "time": null
+  },
+  "miel14": {
+    "dim": 3,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  },
+  "mgl6": {
+    "dim": 3,
+    "pt": 21,
+    "nout": 2,
+    "time": null
+  },
+  "resid1": {
+    "dim": 3,
+    "pt": 21,
+    "nout": 1,
+    "time": null
+  },
+  "trilinear\\_proj": {
+    "dim": 3,
+    "pt": 27,
+    "nout": 1,
+    "time": null
+  },
+  "eupdate": {
+    "dim": 3,
+    "pt": 10,
+    "nout": 9,
+    "time": null
+  },
+  "solvepde": {
+    "dim": 3,
+    "pt": 5,
+    "nout": 1,
+    "time": null
+  },
+  "compgrad": {
+    "dim": 3,
+    "pt": 3,
+    "nout": 2,
+    "time": null
+  },
+  "getadvrt": {
+    "dim": 4,
+    "pt": 2,
+    "nout": 1,
+    "time": null
+  },
+  "probe": {
+    "dim": 3,
+    "pt": 25,
+    "nout": 1,
+    "time": null
+  },
+  "multiload": {
+    "dim": 1,
+    "pt": 3,
+    "nout": 1,
+    "time": null
+  }
+}

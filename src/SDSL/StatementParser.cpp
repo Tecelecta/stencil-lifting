@@ -7,19 +7,19 @@ std::unique_ptr<AST> StatementParser::run(std::queue<Token>& tokenStream)
 	switch (readToken().category)
 	{
 	case Token::Category::DO:
-		RECURSE(DoStatementParser, "在分析Do语句时发现语法错误");
+		RECURSE(DoStatementParser, "In DO statement: syntax error");
 		break;
 	case Token::Category::FOR:
-		RECURSE(ForStatementParser, "在分析for语句时发现语法错误");
+		RECURSE(ForStatementParser, "In FOR statement: syntax error");
 		break;
 	case Token::Category::IF:
-		RECURSE(IfStatementParser, "在分析if语句时发现语法错误");
+		RECURSE(IfStatementParser, "In IF statement: syntax error");
 		break;
 	case Token::Category::CONST:
-		RECURSE(VariableDefinitionParser, "在分析局部常量定义时发现语法错误");
+		RECURSE(VariableDefinitionParser, "In local constant defination: syntax error");
 		break;
 	case Token::Category::VAR:
-		RECURSE(VariableDefinitionParser, "在分析局部变量定义时发现语法错误");
+		RECURSE(VariableDefinitionParser, "In local variable defination: syntax error");
 		break;
 	case Token::Category::END_OF_LINE:
 	case Token::Category::SEMICOLON:
@@ -27,15 +27,15 @@ std::unique_ptr<AST> StatementParser::run(std::queue<Token>& tokenStream)
 		nextToken();
 		break;
 	default:
-		RECURSE(AssignStatementParser, "在分析赋值语句时发现语法错误");
+		RECURSE(AssignStatementParser, "In assign statement: syntax error");
 		switch (readToken().category)
 		{
 		case Token::Category::RPAREN:
-			ERROR("表达式后发现多余的')'");
+			ERROR("Redundant ')' after expr");
 		case Token::Category::RBRACKET:
-			ERROR("表达式后发现多余的']'");
+			ERROR("Redundant ']' after expr");
 		case Token::Category::RBRACE:
-			ERROR("表达式后发现多余的'}'");
+			ERROR("Redundant '}' after expr");
 		}
 		break;
 	}
@@ -47,7 +47,7 @@ std::unique_ptr<AST> AssignStatementParser::run(std::queue<Token>& tokenStream)
 	setup(tokenStream);
 	goto LEFT;
 LEFT: {
-	RECURSE(LeftValueExpressionParser, "在分析左值表达式时，发现语法错误");
+	RECURSE(LeftValueExpressionParser, "In LHS of assign statement: syntax error");
 	goto ASG;
 }
 
@@ -63,12 +63,12 @@ ASG: {
 		nextToken();
 		goto LEFT;
 	default:
-		ERROR("在分析赋值语句时，发现缺少赋值符号")
+		ERROR("In assign statement: missing assigning operator")
 	}
 }
 
 RIGHT: {
-	RECURSE(RightValueExpressionParser, "在分析右值表达式时，发现语法错误");
+	RECURSE(RightValueExpressionParser, "In RHS of assign statement: syntax error");
 	astNodeReduce(AST::Category::ASSIGN_STATEMENT);
 	return std::move(astStack.back());
 }
@@ -82,7 +82,7 @@ std::unique_ptr<AST> IfStatementParser::run(std::queue<Token>& tokenStream)
 	size_t if_body = 0;
 	size_t else_body = 0;
 
-	RECURSE(RightValueExpressionParser, "在分析IF条件表达式时发现语法错误");
+	RECURSE(RightValueExpressionParser, "In IF condition: syntax error");
 
 IF_BODY: {
 	switch (readToken().category)
@@ -100,20 +100,20 @@ IF_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析函数定义时，未正确结束if语句")
+		ERROR("In function defination: incorrect ending of IF statement")
 	case Token::Category::ELSE:
 		astNodeReduce(AST::Category::IF_BODY, if_body);
 		astLeafCreate();
 		nextToken();
 		if (readToken().category == Token::Category::IF)
 		{
-			RECURSE(IfStatementParser, "在分析if语句时发现语法错误");
+			RECURSE(IfStatementParser, "In IF statement: syntax error");
 			goto SUCCESS; // 可以少一个end if
 		}
 		goto ELSE_BODY;
 	default:
 		if_body++;
-		RECURSE(StatementParser, "在分析if语句时发现语法错误");
+		RECURSE(StatementParser, "In IF statement: syntax error");
 		goto IF_BODY;
 	}
 }
@@ -134,10 +134,10 @@ ELSE_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析函数定义时，未正确结束else语句")
+		ERROR("In function defination: incorrect ending of ELSE statement")
 	default:
 		else_body++;
-		RECURSE(StatementParser, "在分析else语句时发现语法错误");
+		RECURSE(StatementParser, "In ELSE statement: syntax error");
 		goto ELSE_BODY;
 	}
 }
@@ -167,13 +167,13 @@ DO_VARIABLE: {
 			nextToken();
 			goto DO_HEAD;
 		}
-		ERROR("在分析循环定义时，未识别到赋值")
+		ERROR("In loop defination: assignment not found")
 	}
-	ERROR("在分析循环定义时，未识别到循环控制变量")
+	ERROR("In loop defination: loop counter not found")
 }
 
 DO_HEAD: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环控制变量开始条件");
+	RECURSE(RightValueExpressionParser, "In loop condition: starting of loop counter not found");
 	if (readToken().category == Token::Category::COMMA)
 	{
 		astLeafCreate();
@@ -181,11 +181,11 @@ DO_HEAD: {
 		astNodeReduce(AST::Category::LOOP_HEAD, 2);
 		goto DO_TAIL;
 	}
-	ERROR("在分析循环条件时，未正确识别循环控制变量结束条件")
+	ERROR("In loop condition: incorrect ending of loop counter")
 }
 
 DO_TAIL: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环控制变量结束条件");
+	RECURSE(RightValueExpressionParser, "In loop conditon: ending of loop counter not found");
 	if (readToken().category == Token::Category::COMMA)
 	{
 		astLeafCreate();
@@ -198,17 +198,17 @@ DO_TAIL: {
 		astNodeReduce(AST::Category::LOOP_TAIL, 1);
 		goto DO_BODY;
 	}
-	ERROR("在分析循环条件时，未正确识别循环步长")
+	ERROR("In loop condition: incorrect stride of loop counter")
 }
 
 DO_STEP: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环步长");
+	RECURSE(RightValueExpressionParser, "In loop condition: stride of loop counter not found");
 	astNodeReduce(AST::Category::LOOP_STEP, 1);
 	if (readToken().category == Token::Category::END_OF_LINE)
 	{
 		goto DO_BODY;
 	}
-	ERROR("在分析循环条件时，未正确识别循环体")
+	ERROR("In loop condition: incorrect loop body")
 }
 
 DO_BODY: {
@@ -227,10 +227,10 @@ DO_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析函数定义时，未正确结束循环语句")
+		ERROR("In function defination: incorrect ending of loop statement")
 	default:
 		doBody++;
-		RECURSE(StatementParser, "在分析语句时发现语法错误");
+		RECURSE(StatementParser, "In statement: syntax error");
 		goto DO_BODY;
 	}
 }
@@ -262,13 +262,13 @@ FOR_VARIABLE: {
 			nextToken();
 			goto FOR_HEAD;
 		}
-		ERROR("在分析循环定义时，未识别到赋值")
+		ERROR("In loop defination: assignment not found")
 	}
-	ERROR("在分析循环定义时，未识别到循环控制变量")
+	ERROR("In loop defination: loop counter not found")
 }
 
 FOR_HEAD: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环控制变量开始条件");
+	RECURSE(RightValueExpressionParser, "In loop condition: starting of loop counter not found");
 	if (readToken().category == Token::Category::COMMA)
 	{
 		astLeafCreate();
@@ -276,11 +276,11 @@ FOR_HEAD: {
 		astNodeReduce(AST::Category::LOOP_HEAD, 2);
 		goto FOR_TAIL;
 	}
-	ERROR("在分析循环条件时，未正确识别循环控制变量结束条件")
+	ERROR("In loop condition: incorrect ending of loop counter")
 }
 
 FOR_TAIL: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环控制变量结束条件");
+	RECURSE(RightValueExpressionParser, "In loop conditon: ending of loop counter not found");
 	if (readToken().category == Token::Category::COMMA)
 	{
 		astLeafCreate();
@@ -303,11 +303,11 @@ FOR_TAIL: {
 		astNodeReduce(AST::Category::LOOP_INDEX, 4);
 		goto FOR_BODY;
 	}
-	ERROR("在分析循环条件时，未正确识别循环步长")
+	ERROR("In loop condition: incorrect stride of loop counter")
 }
 
 FOR_STEP: {
-	RECURSE(RightValueExpressionParser, "在分析循环条件时，未识别到循环步长");
+	RECURSE(RightValueExpressionParser, "In loop condition: stride of loop counter not found");
 	if (readToken().category == Token::Category::SEMICOLON)
 	{
 		astLeafCreate();
@@ -323,7 +323,7 @@ FOR_STEP: {
 		astNodeReduce(AST::Category::LOOP_INDEX, 5);
 		goto FOR_BODY;
 	}
-	ERROR("在分析循环条件时，未正确识别循环体")
+	ERROR("In loop condition: incorrect loop body")
 }
 
 FOR_BODY: {
@@ -342,10 +342,10 @@ FOR_BODY: {
 			nextToken();
 			goto SUCCESS;
 		}
-		ERROR("在分析函数定义时，未正确结束循环语句")
+		ERROR("In function defination: incorrect ending of loop statement")
 	default:
 		forBody++;
-		RECURSE(StatementParser, "在分析语句时发现语法错误");
+		RECURSE(StatementParser, "In statement: syntax error");
 		goto FOR_BODY;
 	}
 }

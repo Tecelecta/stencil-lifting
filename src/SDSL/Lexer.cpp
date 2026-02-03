@@ -134,11 +134,11 @@ ZERO: {
 	}
 	else if (isdigit(curr))
 	{
-		ERROR("整数部分以0开头")
+		ERROR("Decimal part starting with 0")
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("标识符不能以数字开头")
+		ERROR("Idntifier starts with digit")
 	}
 	tokenEnd(Token::Category::DEC_INTEGER);
 	goto START;
@@ -167,7 +167,7 @@ DEC_INTEGER: { // -> 0 | ([1-9][0-9]*) EXPONENT ->[eE][+-] ? [DIGIT]+
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("标识符不能以数字开头")
+		ERROR("Idntifier starts with digit")
 	}
 	tokenEnd(Token::Category::DEC_INTEGER);
 	goto START;
@@ -196,7 +196,7 @@ DIGIT: { // -> [0-9]*
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("标识符不能以数字开头")
+		ERROR("Idntifier starts with digit")
 	}
 	tokenEnd(Token::Category::DEC_INTEGER);
 	goto START;
@@ -209,7 +209,7 @@ FLOAT: {
 		nextChar();
 		goto FRACTION;
 	}
-	ERROR("小数部分出现非法字符")
+	ERROR("小数部分出现Illegal token")
 }
 FRACTION: {
 	if (isdigit(curr))
@@ -237,7 +237,7 @@ EXPFLOAT: {
 	}
 	else
 	{
-		ERROR("指数部分出现非法字符")
+		ERROR("指数部分出现Illegal token")
 	}
 }
 EXPFLOATDIGIT: {
@@ -248,7 +248,7 @@ EXPFLOATDIGIT: {
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("指数部分出现非法字符")
+		ERROR("指数部分出现Illegal token")
 	}
 	tokenEnd(Token::Category::DEC_RATIONAL);
 	goto START;
@@ -261,7 +261,7 @@ HEX_INTEGER: { // -> 0[xX][0-9a-fA-F]+
 		nextChar();
 		goto HEXDIGIT;
 	}
-	ERROR("整数部分出现非法字符")
+	ERROR("整数部分出现Illegal token")
 }
 HEXDIGIT: { // -> [0-9a-fA-F]*
 	if (isxdigit(curr)) // checks whether CURR is a hexdecimal digit character
@@ -271,7 +271,7 @@ HEXDIGIT: { // -> [0-9a-fA-F]*
 	}
 	else if (isalpha(curr))
 	{
-		ERROR("整数部分出现非法字符")
+		ERROR("整数部分出现Illegal token")
 	}
 	tokenEnd(Token::Category::HEX_INTEGER);
 	goto START;
@@ -284,7 +284,7 @@ BIN_INTEGER: { // -> 0[bB][01]+
 		nextChar();
 		goto BINDIGIT;
 	}
-	ERROR("整数部分出现非法字符")
+	ERROR("整数部分出现Illegal token")
 }
 BINDIGIT: { // -> [01]*
 	if (curr == '0' || curr == '1')
@@ -294,7 +294,7 @@ BINDIGIT: { // -> [01]*
 	}
 	else if (isalnum(curr))
 	{
-		ERROR("整数部分出现非法字符")
+		ERROR("整数部分出现Illegal token")
 	}
 	tokenEnd(Token::Category::BIN_INTEGER);
 	goto START;
@@ -569,7 +569,7 @@ COMMENT_MULTILINE: {
 	}
 	else if (curr == '\0') // 在文件结束的时候都没有匹配到*/，说明注释符号有误
 	{
-		ERROR("注释不完整")
+		ERROR("Incomplete comment")
 	}
 	nextChar();
 	goto COMMENT_MULTILINE;
@@ -582,15 +582,15 @@ COMMENT_MULTILINE_STAR: {
 	}
 	else if (curr == '\0') // 在文件结束的时候都没有匹配到*/，说明注释符号有误
 	{
-		ERROR("注释不完整")
+		ERROR("Incomplete comment")
 	}
 	nextChar();
 	goto COMMENT_MULTILINE;
 }
 
-// 非法字符
+// Illegal token
 ILLEGAL:
-	ERROR("非法字符")
+	ERROR("Illegal token")
 
 // DFA成功结束
 SUCCESS:
